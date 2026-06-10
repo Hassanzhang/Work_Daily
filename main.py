@@ -27,6 +27,18 @@ def init_db() -> None:
             )
             """
         )
+        existing_columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(tasks)").fetchall()
+        }
+        column_migrations = {
+            "created_stamp": "ALTER TABLE tasks ADD COLUMN created_stamp INTEGER",
+            "completed_at": "ALTER TABLE tasks ADD COLUMN completed_at TEXT",
+            "completed_stamp": "ALTER TABLE tasks ADD COLUMN completed_stamp INTEGER",
+        }
+        for column_name, statement in column_migrations.items():
+            if column_name not in existing_columns:
+                conn.execute(statement)
+        conn.commit()
 
 
 init_db()
