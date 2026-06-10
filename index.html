@@ -2350,7 +2350,7 @@
       const visibleTasks = getVisibleTasks();
       const tasks = applyFilterAndCollapse(visibleTasks);
       if (editingTaskId && !tasks.some((task) => task.id === editingTaskId)) {
-        closeEditor(false);
+        clearEditorState();
       }
       taskCount.textContent = `共 ${visibleTasks.length} 条`;
       taskList.classList.toggle("is-entering", shouldAnimateTaskList);
@@ -2360,7 +2360,7 @@
 
       if (!tasks.length) {
         if (!getTaskById(editingTaskId) || !visibleTasks.some((task) => task.id === editingTaskId)) {
-          closeEditor(false);
+          clearEditorState();
         }
         taskList.innerHTML = `
           <section class="empty-state">
@@ -2564,7 +2564,7 @@
 
       const selected = state.selectedDate;
       const task = {
-        id: crypto.randomUUID(),
+        id: generateTaskId(),
         title,
         priority: state.composerPriority,
         status: "todo",
@@ -2624,10 +2624,22 @@
           };
         }
       }
-      editingTaskId = null;
-      editorDraft = null;
+      clearEditorState();
       renderTaskList();
       renderEditorPanel();
+    }
+
+    function clearEditorState() {
+      editingTaskId = null;
+      editorDraft = null;
+    }
+
+    function generateTaskId() {
+      if (window.crypto && typeof window.crypto.randomUUID === "function") {
+        return window.crypto.randomUUID();
+      }
+      const randomPart = Math.random().toString(36).slice(2, 10);
+      return `task-${Date.now()}-${randomPart}`;
     }
 
     function saveEditorChanges() {
