@@ -201,6 +201,10 @@ function remainingLabel(item) {
   }
   return `还剩 ${item.days_remaining} 天`;
 }
+
+function progressValue(item) {
+  return `${Math.max(0, Math.min(100, item.progress_percent ?? 0))}%`;
+}
 </script>
 
 <template>
@@ -358,8 +362,16 @@ function remainingLabel(item) {
                 <span v-if="item.price" class="meta-tag">{{ formatPrice(item.price) }}</span>
               </div>
               <div class="membership-progress">
+                <div class="membership-progress-head">
+                  <span class="membership-progress-label">到期进度</span>
+                  <span class="membership-progress-value">{{ progressValue(item) }}</span>
+                </div>
                 <div class="membership-progress-track">
-                  <div class="membership-progress-fill" :data-status="item.status" :style="{ width: `${item.progress_percent}%` }"></div>
+                  <div
+                    class="membership-progress-fill"
+                    :data-status="item.status"
+                    :style="{ transform: `translateX(-${100 - Math.max(0, Math.min(100, item.progress_percent ?? 0))}%)` }"
+                  ></div>
                 </div>
               </div>
               <div class="membership-item-dates">
@@ -669,20 +681,40 @@ function remainingLabel(item) {
 }
 
 .membership-progress {
-  padding-top: 2px;
+  display: grid;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.membership-progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.membership-progress-label,
+.membership-progress-value {
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1;
 }
 
 .membership-progress-track {
-  height: 8px;
+  position: relative;
+  height: 16px;
+  width: 100%;
   border-radius: 999px;
-  background: oklch(94.6% 0.004 228);
+  background: oklch(94.6% 0.004 228 / 0.96);
   overflow: hidden;
 }
 
 .membership-progress-fill {
+  width: 100%;
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, oklch(71% 0.08 232), oklch(66% 0.09 240));
+  transition: transform var(--motion-smooth) var(--ease-out-quint);
 }
 
 .membership-progress-fill[data-status="expiring"] {

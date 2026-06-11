@@ -14,7 +14,8 @@ DATABASE_URL = os.getenv(
     "mysql+pymysql://root:hassan0121@mysql:3306/todo",
 )
 TASKS_TABLE = "todo_data"
-MEMBERSHIPS_TABLE = "membership_data"
+MEMBERSHIPS_TABLE = "todo_vip"
+LEGACY_MEMBERSHIPS_TABLE = "membership_data"
 
 
 def parse_database_url() -> dict[str, str | int]:
@@ -35,6 +36,17 @@ def parse_database_url() -> dict[str, str | int]:
 
 def get_connection():
     return pymysql.connect(**parse_database_url())
+
+
+def table_exists(cursor, table_name: str) -> bool:
+    cursor.execute("SHOW TABLES LIKE %s", (table_name,))
+    return cursor.fetchone() is not None
+
+
+def table_row_count(cursor, table_name: str) -> int:
+    cursor.execute(f"SELECT COUNT(*) AS count FROM {table_name}")
+    row = cursor.fetchone() or {}
+    return int(row.get("count", 0))
 
 
 def normalize_datetime_text(value: str | None) -> str | None:
@@ -82,6 +94,32 @@ def init_db() -> None:
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
                 """
             )
+            if (
+                MEMBERSHIPS_TABLE != LEGACY_MEMBERSHIPS_TABLE
+                and table_exists(cursor, LEGACY_MEMBERSHIPS_TABLE)
+                and table_row_count(cursor, MEMBERSHIPS_TABLE) == 0
+                and table_row_count(cursor, LEGACY_MEMBERSHIPS_TABLE) > 0
+            ):
+                cursor.execute(
+                    f"""
+                    INSERT INTO {MEMBERSHIPS_TABLE} (
+                        id,
+                        name,
+                        start_date,
+                        end_date,
+                        price,
+                        note
+                    )
+                    SELECT
+                        id,
+                        name,
+                        start_date,
+                        end_date,
+                        price,
+                        note
+                    FROM {LEGACY_MEMBERSHIPS_TABLE}
+                    """
+                )
         conn.commit()
 
 
