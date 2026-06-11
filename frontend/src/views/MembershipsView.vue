@@ -1,0 +1,734 @@
+<script setup>
+import { computed, onMounted, reactive, ref } from "vue";
+
+const MEMBERSHIPS_API = "/api/memberships";
+const filters = [
+  { value: "all", label: "全部" },
+  { value: "active", label: "存续期间" },
+  { value: "expiring", label: "即将到期" },
+  { value: "expired", label: "已过期" }
+];
+
+const memberships = ref([]);
+const currentFilter = ref("all");
+const expandedComposer = ref(false);
+const editingId = ref(null);
+const syncPending = ref(false);
+
+const composer = reactive({
+  name: "",
+  endDate: "",
+  startDate: "",
+  price: "",
+  note: ""
+});
+
+const editorDraft = reactive({
+  name: "",
+  startDate: "",
+  endDate: "",
+  price: "",
+  note: ""
+});
+
+onMounted(() => {
+  hydrateMemberships();
+});
+
+const filteredMemberships = computed(() => {
+  const source = memberships.value.slice().sort((left, right) => {
+    return left.end_date.localeCompare(right.end_date) || left.name.localeCompare(right.name);
+  });
+  if (currentFilter.value === "all") return source;
+  return source.filter((item) => item.status === currentFilter.value);
+});
+
+const urgentMemberships = computed(() =>
+  memberships.value
+    .filter((item) => item.status !== "active")
+    .sort((left, right) => {
+      if (left.status !== right.status) {
+        return left.status === "expiring" ? -1 : 1;
+      }
+      return left.end_date.localeCompare(right.end_date);
+    })
+    .slice(0, 3)
+);
+
+const summary = computed(() => ({
+  total: memberships.value.length,
+  expiring: memberships.value.filter((item) => item.status === "expiring").length,
+  expired: memberships.value.filter((item) => item.status === "expired").length
+}));
+
+function hydrateEditor(member) {
+  editorDraft.name = member.name;
+  editorDraft.startDate = member.start_date;
+  editorDraft.endDate = member.end_date;
+  editorDraft.price = member.price ?? "";
+  editorDraft.note = member.note ?? "";
+}
+
+function openEditor(member) {
+  editingId.value = member.id;
+  hydrateEditor(member);
+}
+
+function closeEditor() {
+  editingId.value = null;
+}
+
+function resetComposer() {
+  composer.name = "";
+  composer.endDate = "";
+  composer.startDate = "";
+  composer.price = "";
+  composer.note = "";
+  expandedComposer.value = false;
+}
+
+async function hydrateMemberships() {
+  try {
+    const response = await fetch(MEMBERSHIPS_API, {
+      headers: { Accept: "application/json" }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to load memberships: ${response.status}`);
+    }
+    const data = await response.json();
+    memberships.value = Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function syncMemberships() {
+  syncPending.value = true;
+  try {
+    const response = await fetch(MEMBERSHIPS_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(
+        memberships.value.map((item) => ({
+          id: item.id,
+          name: item.name,
+          start_date: item.start_date,
+          end_date: item.end_date,
+          price: item.price || null,
+          note: item.note || null
+        }))
+      )
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to sync memberships: ${response.status}`);
+    }
+    await hydrateMemberships();
+  } catch (error) {
+    console.error(error);
+  } finally {
+    syncPending.value = false;
+  }
+}
+
+function generateId() {
+  if (window.crypto && typeof window.crypto.randomUUID === "function") {
+    return window.crypto.randomUUID();
+  }
+  return `membership-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+async function addMembership() {
+  const name = composer.name.trim();
+  const endDate = composer.endDate;
+  if (!name || !endDate) return;
+  memberships.value.push({
+    id: generateId(),
+    name,
+    start_date: composer.startDate || todayIso(),
+    end_date: endDate,
+    price: composer.price.trim(),
+    note: composer.note.trim()
+  });
+  resetComposer();
+  await syncMemberships();
+}
+
+async function saveEditor(memberId) {
+  const target = memberships.value.find((item) => item.id === memberId);
+  if (!target) return;
+  target.name = editorDraft.name.trim() || target.name;
+  target.start_date = editorDraft.startDate || target.start_date;
+  target.end_date = editorDraft.endDate || target.end_date;
+  target.price = editorDraft.price.trim();
+  target.note = editorDraft.note.trim();
+  closeEditor();
+  await syncMemberships();
+}
+
+async function removeMembership(memberId) {
+  memberships.value = memberships.value.filter((item) => item.id !== memberId);
+  if (editingId.value === memberId) closeEditor();
+  await syncMemberships();
+}
+
+function todayIso() {
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function formatDate(value) {
+  if (!value) return "";
+  const [year, month, day] = value.split("-");
+  return `${year}.${month}.${day}`;
+}
+
+function formatPrice(value) {
+  return value ? `¥${value}` : "未填写价格";
+}
+
+function statusLabel(status) {
+  if (status === "expiring") return "即将到期";
+  if (status === "expired") return "已过期";
+  return "存续期间";
+}
+
+function remainingLabel(item) {
+  if (item.status === "expired") {
+    return `已过期 ${Math.abs(item.days_remaining)} 天`;
+  }
+  if (item.status === "expiring") {
+    return `还剩 ${item.days_remaining} 天`;
+  }
+  return `还剩 ${item.days_remaining} 天`;
+}
+</script>
+
+<template>
+  <div class="app-shell membership-app-shell">
+    <aside class="sidebar membership-sidebar">
+      <section class="brand-block">
+        <p class="eyebrow">Membership tracker</p>
+        <h1 class="brand-title">Member Expiry</h1>
+        <p class="brand-copy">记录会员周期，提前感知到期节点。</p>
+      </section>
+
+      <section class="membership-summary-card">
+        <div class="membership-summary-head">
+          <p class="eyebrow">Overview</p>
+          <h2 class="membership-summary-title">会员总览</h2>
+        </div>
+        <div class="membership-summary-grid">
+          <article class="summary-metric">
+            <span class="summary-metric-label">总会员数</span>
+            <strong class="summary-metric-value">{{ summary.total }}</strong>
+          </article>
+          <article class="summary-metric">
+            <span class="summary-metric-label">即将到期</span>
+            <strong class="summary-metric-value is-warning">{{ summary.expiring }}</strong>
+          </article>
+          <article class="summary-metric">
+            <span class="summary-metric-label">已过期</span>
+            <strong class="summary-metric-value is-muted">{{ summary.expired }}</strong>
+          </article>
+        </div>
+      </section>
+
+      <section class="membership-alert-card">
+        <div class="membership-alert-head">
+          <p class="eyebrow">Next up</p>
+          <h3 class="membership-alert-title">即将到期提醒</h3>
+        </div>
+        <div v-if="urgentMemberships.length" class="membership-alert-list">
+          <article
+            v-for="item in urgentMemberships"
+            :key="item.id"
+            class="membership-alert-item"
+            :data-status="item.status"
+          >
+            <div class="membership-alert-name">{{ item.name }}</div>
+            <div class="membership-alert-meta">{{ remainingLabel(item) }}</div>
+          </article>
+        </div>
+        <p v-else class="membership-alert-empty">暂无紧急到期项目。</p>
+      </section>
+
+      <section class="stats-panel membership-stats-panel">
+        <article class="stat-block" data-active="true" data-kind="in-progress">
+          <p class="stat-label">正常存续</p>
+          <p class="stat-value">{{ summary.total - summary.expiring - summary.expired }}</p>
+        </article>
+        <article class="stat-block" :data-active="summary.expiring > 0" data-kind="created">
+          <p class="stat-label">即将到期</p>
+          <p class="stat-value">{{ summary.expiring }}</p>
+        </article>
+        <article class="stat-block" :data-active="summary.expired > 0" data-kind="done">
+          <p class="stat-label">已过期</p>
+          <p class="stat-value">{{ summary.expired }}</p>
+        </article>
+      </section>
+    </aside>
+
+    <main class="workspace membership-workspace">
+      <header class="page-head membership-head">
+        <div class="title-row">
+          <div class="title-stack">
+            <p class="eyebrow">Memberships</p>
+            <h2 class="hero-title">会员到期</h2>
+            <p class="hero-copy">管理订阅周期，查看剩余时间和生命周期进度。</p>
+          </div>
+        </div>
+
+        <section class="add-shell membership-composer" aria-label="新增会员">
+          <div class="add-row membership-add-row">
+            <div class="composer-title">
+              <input v-model="composer.name" type="text" maxlength="120" placeholder="会员名称，例如 ChatGPT Plus" />
+            </div>
+            <div class="membership-date-field">
+              <label class="membership-inline-label" for="membershipEndDate">到期日期</label>
+              <input id="membershipEndDate" v-model="composer.endDate" type="date" />
+            </div>
+            <button class="primary-button" type="button" :disabled="syncPending" @click="addMembership">
+              新增会员
+            </button>
+          </div>
+
+          <div class="membership-composer-extra">
+            <button class="text-button membership-expand" type="button" @click="expandedComposer = !expandedComposer">
+              {{ expandedComposer ? "收起字段" : "更多字段" }}
+            </button>
+          </div>
+
+          <div v-if="expandedComposer" class="membership-extra-grid">
+            <label class="membership-field">
+              <span class="membership-field-label">开通日期</span>
+              <input v-model="composer.startDate" type="date" />
+            </label>
+            <label class="membership-field">
+              <span class="membership-field-label">价格</span>
+              <input v-model="composer.price" type="text" maxlength="32" placeholder="例如 158" />
+            </label>
+            <label class="membership-field membership-field--full">
+              <span class="membership-field-label">备注</span>
+              <textarea v-model="composer.note" rows="3" maxlength="240" placeholder="账号归属、购买渠道等"></textarea>
+            </label>
+          </div>
+        </section>
+      </header>
+
+      <section class="membership-list-shell">
+        <div class="section-row">
+          <div class="section-heading">
+            <h3 class="section-title">会员清单</h3>
+            <span class="section-count">共 {{ memberships.length }} 条</span>
+          </div>
+          <div class="filter-group">
+            <button
+              v-for="item in filters"
+              :key="item.value"
+              type="button"
+              class="filter-chip"
+              :class="{ 'is-active': currentFilter === item.value }"
+              @click="currentFilter = item.value"
+            >
+              {{ item.label }}
+            </button>
+          </div>
+        </div>
+
+        <div class="membership-list">
+          <article
+            v-for="item in filteredMemberships"
+            :key="item.id"
+            class="membership-item"
+            :class="{ 'is-editing': editingId === item.id, 'is-expired': item.status === 'expired' }"
+          >
+            <div class="membership-item-main">
+              <div class="membership-item-header">
+                <div class="membership-item-title">{{ item.name }}</div>
+                <div class="task-actions membership-actions">
+                  <button type="button" class="text-button" @click="editingId === item.id ? closeEditor() : openEditor(item)">
+                    {{ editingId === item.id ? "收起" : "编辑" }}
+                  </button>
+                  <button type="button" class="text-button danger-button" @click="removeMembership(item.id)">删除</button>
+                </div>
+              </div>
+              <div class="membership-item-meta">
+                <span class="status-badge" :data-status="item.status">{{ statusLabel(item.status) }}</span>
+                <span class="meta-tag">{{ remainingLabel(item) }}</span>
+                <span v-if="item.price" class="meta-tag">{{ formatPrice(item.price) }}</span>
+              </div>
+              <div class="membership-progress">
+                <div class="membership-progress-track">
+                  <div class="membership-progress-fill" :data-status="item.status" :style="{ width: `${item.progress_percent}%` }"></div>
+                </div>
+              </div>
+              <div class="membership-item-dates">
+                <span>{{ formatDate(item.start_date) }}</span>
+                <span>—</span>
+                <span>{{ formatDate(item.end_date) }}</span>
+              </div>
+            </div>
+
+            <transition name="membership-editor">
+              <div v-if="editingId === item.id" class="membership-editor">
+                <div class="membership-editor-grid">
+                  <label class="membership-field">
+                    <span class="membership-field-label">会员名称</span>
+                    <input v-model="editorDraft.name" type="text" maxlength="120" />
+                  </label>
+                  <label class="membership-field">
+                    <span class="membership-field-label">开通日期</span>
+                    <input v-model="editorDraft.startDate" type="date" />
+                  </label>
+                  <label class="membership-field">
+                    <span class="membership-field-label">到期日期</span>
+                    <input v-model="editorDraft.endDate" type="date" />
+                  </label>
+                  <label class="membership-field">
+                    <span class="membership-field-label">价格</span>
+                    <input v-model="editorDraft.price" type="text" maxlength="32" />
+                  </label>
+                  <label class="membership-field membership-field--full">
+                    <span class="membership-field-label">备注</span>
+                    <textarea v-model="editorDraft.note" rows="3" maxlength="240"></textarea>
+                  </label>
+                </div>
+                <div class="membership-editor-actions">
+                  <button class="soft-button" type="button" @click="closeEditor">取消</button>
+                  <button class="primary-button" type="button" @click="saveEditor(item.id)">保存</button>
+                </div>
+              </div>
+            </transition>
+          </article>
+
+          <section v-if="!filteredMemberships.length" class="empty-state membership-empty">
+            <h4 class="empty-title">暂无会员记录</h4>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+</template>
+
+<style scoped>
+.membership-app-shell {
+  align-items: stretch;
+}
+
+.membership-sidebar {
+  gap: 18px;
+}
+
+.membership-summary-card,
+.membership-alert-card {
+  padding: 18px 20px;
+  background: linear-gradient(180deg, oklch(99.2% 0.004 228), oklch(97.8% 0.006 228 / 0.94));
+  border: 1px solid oklch(100% 0 0 / 0.72);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+}
+
+.membership-summary-head,
+.membership-alert-head {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.membership-summary-title,
+.membership-alert-title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.1;
+  font-weight: 660;
+  letter-spacing: -0.03em;
+}
+
+.membership-summary-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.summary-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: oklch(99.2% 0.004 224 / 0.88);
+  border: 1px solid oklch(92% 0.008 228);
+}
+
+.summary-metric-label {
+  color: var(--text-soft);
+  font-size: 13px;
+}
+
+.summary-metric-value {
+  font-size: 18px;
+  font-weight: 760;
+}
+
+.summary-metric-value.is-warning {
+  color: #ea580c;
+}
+
+.summary-metric-value.is-muted {
+  color: oklch(62% 0.008 228);
+}
+
+.membership-alert-list {
+  display: grid;
+  gap: 8px;
+}
+
+.membership-alert-item {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: oklch(99.2% 0.004 224 / 0.88);
+  border: 1px solid oklch(92% 0.008 228);
+}
+
+.membership-alert-item[data-status="expiring"] {
+  background: oklch(97% 0.02 52 / 0.72);
+}
+
+.membership-alert-item[data-status="expired"] {
+  background: oklch(95% 0.01 28 / 0.6);
+}
+
+.membership-alert-name {
+  font-size: 14px;
+  font-weight: 620;
+}
+
+.membership-alert-meta,
+.membership-alert-empty {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.membership-stats-panel {
+  margin-top: 0;
+}
+
+.membership-workspace {
+  padding-bottom: 26px;
+}
+
+.membership-head {
+  margin-bottom: 16px;
+}
+
+.membership-composer {
+  gap: 10px;
+}
+
+.membership-add-row {
+  grid-template-columns: minmax(0, 1.25fr) minmax(200px, 0.7fr) auto;
+}
+
+.membership-date-field,
+.membership-field {
+  display: grid;
+  gap: 6px;
+}
+
+.membership-inline-label,
+.membership-field-label {
+  font-size: 11px;
+  color: var(--text-soft);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.membership-date-field input,
+.membership-field input,
+.membership-field textarea {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: oklch(99.5% 0.003 224 / 0.96);
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--text);
+  outline: none;
+}
+
+.membership-field textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.membership-date-field input:focus,
+.membership-field input:focus,
+.membership-field textarea:focus {
+  border-color: oklch(86% 0.03 230);
+  box-shadow: 0 0 0 4px oklch(94% 0.02 230 / 0.55);
+}
+
+.membership-composer-extra {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.membership-expand {
+  color: rgb(0 0 0 / 0.45);
+}
+
+.membership-extra-grid,
+.membership-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.membership-field--full {
+  grid-column: 1 / -1;
+}
+
+.membership-list-shell {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.membership-list {
+  flex: 1;
+  min-height: 520px;
+  border: 1px solid oklch(91% 0.008 228);
+  border-radius: 16px;
+  background: linear-gradient(180deg, oklch(99.5% 0.003 224 / 0.72), oklch(98.2% 0.005 228 / 0.78));
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow:
+    inset 0 1px 0 oklch(100% 0 0 / 0.42),
+    0 10px 18px oklch(28% 0.016 240 / 0.03);
+}
+
+.membership-item {
+  padding: 16px 18px;
+  border-bottom: 1px solid oklch(93.8% 0.006 228);
+  background: oklch(100% 0 0 / 0.24);
+  transition:
+    background-color var(--motion-swift) var(--ease-out-quad),
+    box-shadow var(--motion-swift) var(--ease-out-quad);
+}
+
+.membership-item:last-child {
+  border-bottom: 0;
+}
+
+.membership-item:hover {
+  background: oklch(100% 0 0 / 0.34);
+}
+
+.membership-item.is-editing {
+  background: oklch(100% 0 0 / 0.42);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.04);
+}
+
+.membership-item.is-expired {
+  color: oklch(62% 0.008 228);
+}
+
+.membership-item-main {
+  display: grid;
+  gap: 10px;
+}
+
+.membership-item-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.membership-item-title {
+  font-size: 16px;
+  font-weight: 620;
+  line-height: 1.3;
+}
+
+.membership-actions {
+  min-width: 88px;
+}
+
+.membership-item-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.membership-progress {
+  padding-top: 2px;
+}
+
+.membership-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: oklch(94.6% 0.004 228);
+  overflow: hidden;
+}
+
+.membership-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, oklch(71% 0.08 232), oklch(66% 0.09 240));
+}
+
+.membership-progress-fill[data-status="expiring"] {
+  background: linear-gradient(90deg, oklch(71% 0.18 24), oklch(79% 0.16 52));
+}
+
+.membership-progress-fill[data-status="expired"] {
+  background: linear-gradient(90deg, oklch(80% 0.004 228), oklch(70% 0.004 228));
+}
+
+.membership-item-dates {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.membership-editor {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid oklch(93% 0.006 228 / 0.7);
+}
+
+.membership-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.membership-editor-enter-active,
+.membership-editor-leave-active {
+  transition:
+    opacity 200ms var(--ease-out-quad),
+    transform 200ms var(--ease-out-quad);
+}
+
+.membership-editor-enter-from,
+.membership-editor-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.membership-empty {
+  min-height: 100%;
+}
+</style>
