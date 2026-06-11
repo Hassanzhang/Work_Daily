@@ -23,9 +23,8 @@ jobs:
           port: ${{ secrets.DEPLOY_PORT }}
           script: |
             set -e
-            cd /opt/apps/Work_Daily
+            cd /opt/apps/my-todo-project
             git fetch origin main
             git reset --hard origin/main
-            mkdir -p todo-data
             docker compose pull
-            docker compose up -d --force-recreate --remove-orphans
+            docker compose up -d --build --force-recreate --remove-orphans

@@ -2082,15 +2082,11 @@
         }
         const parsed = JSON.parse(raw);
         return {
-          tasks: Array.isArray(parsed.tasks) ? parsed.tasks.map((task, index) => {
+          tasks: Array.isArray(parsed.tasks) ? parsed.tasks.map((task) => {
             const normalizedTask = { ...task };
             delete normalizedTask.notes;
             delete normalizedTask.isExpanded;
-            return {
-              ...normalizedTask,
-              createdStamp: typeof task.createdStamp === "number" && task.createdStamp > 1000000000000 ? task.createdStamp : null,
-              completedStamp: typeof task.completedStamp === "number" && task.completedStamp > 1000000000000 ? task.completedStamp : null
-            };
+            return deserializeTask(normalizedTask);
           }) : [],
           selectedDate: today,
           calendarMonth: today.slice(0, 7),
@@ -2516,9 +2512,9 @@
       }
 
       const task = getTaskById(editingTaskId);
-      const createdLine = task ? `📅 创建于 ${formatTaskTimestamp(task.createdStamp, task.createdAt)}` : "";
+      const createdLine = task ? `📅 创建于 ${formatTaskTimestamp(task.createdAt)}` : "";
       const completedLine = task && task.status === "done" && task.completedAt
-        ? `✅ 完成于 ${formatTaskTimestamp(task.completedStamp, task.completedAt)}`
+        ? `✅ 完成于 ${formatTaskTimestamp(task.completedAt)}`
         : "";
 
       editorPanel.innerHTML = `
@@ -2562,14 +2558,12 @@
         return;
       }
 
-      const selected = state.selectedDate;
       const task = {
         id: generateTaskId(),
         title,
         priority: state.composerPriority,
         status: "todo",
-        createdAt: selected,
-        createdStamp: Date.now(),
+        createdAt: formatDateTimeValue(new Date()),
         completedAt: null
       };
 
@@ -2587,12 +2581,10 @@
       const previousStatus = task.status;
       Object.assign(task, patch);
       if (patch.status === "done" && previousStatus !== "done") {
-        task.completedAt = isoDate(new Date());
-        task.completedStamp = Date.now();
+        task.completedAt = formatDateTimeValue(new Date());
       }
       if (patch.status && patch.status !== "done" && previousStatus === "done") {
         task.completedAt = null;
-        task.completedStamp = null;
       }
       if (!task.title) task.title = "未命名任务";
       if (rerender) {
@@ -2657,15 +2649,12 @@
       element.style.height = `${Math.min(element.scrollHeight, 144)}px`;
     }
 
-    function formatTaskTimestamp(stamp, fallbackDate) {
-      if (typeof stamp === "number" && stamp > 1000000000000) {
-        const date = new Date(stamp);
-        return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-      }
-      if (fallbackDate) {
-        return `${fallbackDate.replaceAll("-", ".")} 00:00`;
-      }
-      return "";
+    function formatTaskTimestamp(value) {
+      if (!value) return "";
+      const normalized = normalizeDateTimeValue(value);
+      const [datePart, timePart = "00:00:00"] = normalized.split(" ");
+      const [hours = "00", minutes = "00"] = timePart.split(":");
+      return `${formatCompactDate(datePart)} ${hours}:${minutes}`;
     }
 
     function bindEditorPanelEvents() {
@@ -2699,9 +2688,9 @@
       const selected = state.selectedDate;
       const tasks = state.tasks.filter((task) => {
         if (selected === today) {
-          return task.createdAt === today || task.completedAt === today || task.status !== "done";
+          return taskDatePart(task.createdAt) === today || taskDatePart(task.completedAt) === today || task.status !== "done";
         }
-        return task.createdAt === selected || task.completedAt === selected;
+        return taskDatePart(task.createdAt) === selected || taskDatePart(task.completedAt) === selected;
       });
 
       return tasks.sort((left, right) => {
@@ -2709,7 +2698,7 @@
         if (statusDiff !== 0) return statusDiff;
         const priorityDiff = priorityOrder[left.priority] - priorityOrder[right.priority];
         if (priorityDiff !== 0) return priorityDiff;
-        return (left.createdStamp || 0) - (right.createdStamp || 0);
+        return left.createdAt.localeCompare(right.createdAt);
       });
     }
 
@@ -2730,20 +2719,20 @@
       const today = isoDate(new Date());
       const baseTasks = selected === today
         ? getVisibleTasks()
-        : state.tasks.filter((task) => task.createdAt === selected || task.completedAt === selected);
+        : state.tasks.filter((task) => taskDatePart(task.createdAt) === selected || taskDatePart(task.completedAt) === selected);
       return {
         inProgress: baseTasks.filter((task) => task.status === "in-progress").length,
         done: baseTasks.filter((task) => task.status === "done").length,
-        created: state.tasks.filter((task) => task.createdAt === selected).length
+        created: state.tasks.filter((task) => taskDatePart(task.createdAt) === selected).length
       };
     }
 
     function hasRecord(date) {
-      return state.tasks.some((task) => task.createdAt === date || task.completedAt === date);
+      return state.tasks.some((task) => taskDatePart(task.createdAt) === date || taskDatePart(task.completedAt) === date);
     }
 
     function hasOpenTask(date) {
-      return state.tasks.some((task) => task.createdAt === date && task.status !== "done");
+      return state.tasks.some((task) => taskDatePart(task.createdAt) === date && task.status !== "done");
     }
 
     function priorityLabel(priority) {
@@ -2786,6 +2775,31 @@
       return `${year}.${month}.${day}`;
     }
 
+    function normalizeDateTimeValue(value, stamp = null) {
+      if (typeof value === "string" && value.length >= 19) {
+        return value.slice(0, 19).replace("T", " ");
+      }
+      if (typeof value === "string" && value.length >= 16) {
+        return `${value.slice(0, 16).replace("T", " ")}:00`;
+      }
+      if (typeof stamp === "number" && stamp > 1000000000000) {
+        return formatDateTimeValue(new Date(stamp));
+      }
+      if (typeof value === "string" && value.length === 10) {
+        return `${value} 00:00:00`;
+      }
+      return "";
+    }
+
+    function formatDateTimeValue(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}:${String(date.getSeconds()).padStart(2, "0")}`;
+    }
+
+    function taskDatePart(value) {
+      const normalized = normalizeDateTimeValue(value);
+      return normalized ? normalized.slice(0, 10) : "";
+    }
+
     function formatMonthDisplay(year, month) {
       return new Intl.DateTimeFormat("en-US", {
         month: "long"
@@ -2816,9 +2830,9 @@
 
     function getTaskDateLabel(task, selectedDate) {
       if (task.status === "done" && task.completedAt) {
-        return `完成于 ${formatCompactDate(task.completedAt)}`;
+        return `完成于 ${formatCompactDate(taskDatePart(task.completedAt))}`;
       }
-      return `创建于 ${formatCompactDate(task.createdAt)}`;
+      return `创建于 ${formatCompactDate(taskDatePart(task.createdAt))}`;
     }
 
     function serializeTask(task) {
@@ -2828,26 +2842,18 @@
         status: task.status,
         priority: task.priority,
         created_at: task.createdAt,
-        created_stamp: task.createdStamp ?? null,
-        completed_at: task.completedAt ?? null,
-        completed_stamp: task.completedStamp ?? null
+        completed_at: task.completedAt ?? null
       };
     }
 
-    function deserializeTask(task, index = 0) {
+    function deserializeTask(task) {
       return {
         id: task.id,
         title: task.title,
         status: task.status,
         priority: task.priority,
-        createdAt: task.created_at,
-        createdStamp: typeof task.created_stamp === "number" && task.created_stamp > 1000000000000
-          ? task.created_stamp
-          : (typeof task.createdStamp === "number" && task.createdStamp > 1000000000000 ? task.createdStamp : null),
-        completedAt: task.completed_at ?? null,
-        completedStamp: typeof task.completed_stamp === "number" && task.completed_stamp > 1000000000000
-          ? task.completed_stamp
-          : (typeof task.completedStamp === "number" && task.completedStamp > 1000000000000 ? task.completedStamp : null)
+        createdAt: normalizeDateTimeValue(task.created_at ?? task.createdAt, task.created_stamp ?? task.createdStamp ?? null),
+        completedAt: normalizeDateTimeValue(task.completed_at ?? task.completedAt, task.completed_stamp ?? task.completedStamp ?? null) || null
       };
     }
 

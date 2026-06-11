@@ -1,47 +1,66 @@
+import os
+from datetime import datetime
+from urllib.parse import urlparse
+
+import pymysql
 from fastapi import FastAPI
 from pydantic import BaseModel
-import os
-import sqlite3
 
 
 app = FastAPI()
-DB_DIR = "/app/data"
-DB_PATH = os.path.join(DB_DIR, "todo.db")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "mysql+pymysql://root:hassan0121@mysql:3306/todo",
+)
+TABLE_NAME = "todo_data"
 
-os.makedirs(DB_DIR, exist_ok=True)
+
+def normalize_datetime_text(value: str | None) -> str | None:
+    if isinstance(value, str) and len(value) >= 19:
+        return value[:19].replace("T", " ")
+    if isinstance(value, str) and len(value) >= 16:
+        return f"{value[:16].replace('T', ' ')}:00"
+    if isinstance(value, str) and len(value) == 10:
+        return f"{value} 00:00:00"
+    return value
+
+
+def parse_database_url() -> dict[str, str | int]:
+    parsed = urlparse(DATABASE_URL)
+    if parsed.scheme != "mysql+pymysql":
+        raise ValueError(f"Unsupported DATABASE_URL scheme: {parsed.scheme}")
+    return {
+        "host": parsed.hostname or "mysql",
+        "port": parsed.port or 3306,
+        "user": parsed.username or "root",
+        "password": parsed.password or "",
+        "database": (parsed.path or "/todo").lstrip("/") or "todo",
+        "charset": "utf8mb4",
+        "cursorclass": pymysql.cursors.DictCursor,
+        "autocommit": False,
+    }
+
+
+def get_connection():
+    return pymysql.connect(**parse_database_url())
 
 
 def init_db() -> None:
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS tasks (
-                id TEXT PRIMARY KEY,
-                title TEXT NOT NULL,
-                status TEXT NOT NULL,
-                priority TEXT NOT NULL,
-                created_at TEXT NOT NULL,
-                created_stamp INTEGER,
-                completed_at TEXT,
-                completed_stamp INTEGER
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                f"""
+                CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
+                    id VARCHAR(64) PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    status VARCHAR(32) NOT NULL,
+                    priority VARCHAR(32) NOT NULL,
+                    created_at DATETIME NOT NULL,
+                    completed_at DATETIME NULL
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                """
             )
-            """
-        )
-        existing_columns = {
-            row[1] for row in conn.execute("PRAGMA table_info(tasks)").fetchall()
-        }
-        column_migrations = {
-            "created_stamp": "ALTER TABLE tasks ADD COLUMN created_stamp INTEGER",
-            "completed_at": "ALTER TABLE tasks ADD COLUMN completed_at TEXT",
-            "completed_stamp": "ALTER TABLE tasks ADD COLUMN completed_stamp INTEGER",
-        }
-        for column_name, statement in column_migrations.items():
-            if column_name not in existing_columns:
-                conn.execute(statement)
         conn.commit()
-
-
-init_db()
 
 
 class Task(BaseModel):
@@ -50,62 +69,62 @@ class Task(BaseModel):
     status: str
     priority: str
     created_at: str
-    created_stamp: int | None = None
     completed_at: str | None = None
-    completed_stamp: int | None = None
+
+
+@app.on_event("startup")
+def on_startup() -> None:
+    init_db()
 
 
 @app.get("/api/tasks")
 def get_tasks():
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT
-                id,
-                title,
-                status,
-                priority,
-                created_at,
-                created_stamp,
-                completed_at,
-                completed_stamp
-            FROM tasks
-            ORDER BY COALESCE(created_stamp, 0), id
-            """
-        )
-        return [dict(row) for row in cursor.fetchall()]
-
-
-@app.post("/api/tasks")
-def save_tasks(tasks: list[Task]):
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute("DELETE FROM tasks")
-        for task in tasks:
-            conn.execute(
-                """
-                INSERT INTO tasks (
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                f"""
+                SELECT
                     id,
                     title,
                     status,
                     priority,
-                    created_at,
-                    created_stamp,
-                    completed_at,
-                    completed_stamp
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    task.id,
-                    task.title,
-                    task.status,
-                    task.priority,
-                    task.created_at,
-                    task.created_stamp,
-                    task.completed_at,
-                    task.completed_stamp,
-                ),
+                    DATE_FORMAT(created_at, '%%Y-%%m-%%d %%H:%%i:%%s') AS created_at,
+                    CASE
+                        WHEN completed_at IS NULL THEN NULL
+                        ELSE DATE_FORMAT(completed_at, '%%Y-%%m-%%d %%H:%%i:%%s')
+                    END AS completed_at
+                FROM {TABLE_NAME}
+                ORDER BY created_at, id
+                """
             )
+            return cursor.fetchall()
+
+
+@app.post("/api/tasks")
+def save_tasks(tasks: list[Task]):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(f"DELETE FROM {TABLE_NAME}")
+            for task in tasks:
+                cursor.execute(
+                    f"""
+                    INSERT INTO {TABLE_NAME} (
+                        id,
+                        title,
+                        status,
+                        priority,
+                        created_at,
+                        completed_at
+                    ) VALUES (%s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        task.id,
+                        task.title,
+                        task.status,
+                        task.priority,
+                        normalize_datetime_text(task.created_at),
+                        normalize_datetime_text(task.completed_at),
+                    ),
+                )
         conn.commit()
     return {"success": True}
