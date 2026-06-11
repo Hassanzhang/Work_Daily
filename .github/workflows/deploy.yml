@@ -23,7 +23,7 @@ jobs:
           port: ${{ secrets.DEPLOY_PORT }}
           script: |
             set -e
-            cd /opt/apps/my-todo-project
+            cd /opt/apps/Work_Daily
             git fetch origin main
             git reset --hard origin/main
             docker compose pull
