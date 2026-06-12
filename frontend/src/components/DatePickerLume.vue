@@ -376,9 +376,10 @@ function isSameDate(left, right) {
 }
 
 .lume-panel__crumb.is-active {
-  background: var(--text);
-  border-color: var(--text);
-  color: white;
+  background: linear-gradient(180deg, oklch(95.8% 0.012 228 / 0.96), oklch(93.8% 0.014 228 / 0.92));
+  border-color: oklch(85% 0.016 228);
+  color: rgb(0 0 0 / 0.68);
+  box-shadow: 0 6px 14px oklch(28% 0.016 240 / 0.05);
 }
 
 .lume-stage {
@@ -425,10 +426,10 @@ function isSameDate(left, right) {
 
 .lume-pill.is-active,
 .lume-month-pill.is-active {
-  background: var(--text);
-  border-color: var(--text);
-  color: white;
-  box-shadow: 0 8px 18px rgb(0 0 0 / 0.08);
+  background: linear-gradient(180deg, oklch(96.4% 0.012 228 / 0.98), oklch(94.8% 0.014 228 / 0.94));
+  border-color: oklch(85% 0.016 228);
+  color: rgb(0 0 0 / 0.68);
+  box-shadow: 0 8px 18px rgb(0 0 0 / 0.06);
 }
 
 .lume-month-pill__name {

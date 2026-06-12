@@ -1585,18 +1585,18 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      min-height: 20px;
-      padding: 0 10px;
-      border-radius: 999px;
-      background: rgb(0 0 0 / 0.03);
+      min-height: 18px;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
       border: 0;
-      font-size: 11px;
-      color: rgb(0 0 0 / 0.48);
+      font-size: 12px;
+      color: rgb(0 0 0 / 0.42);
     }
 
     .meta-priority {
-      background: rgb(0 0 0 / 0.03);
-      gap: 5px;
+      background: transparent;
+      gap: 6px;
     }
 
     .meta-priority-value {
@@ -1616,23 +1616,22 @@
     .status-badge {
       display: inline-flex;
       align-items: center;
-      min-height: 20px;
-      padding: 0 8px;
-      border-radius: 999px;
-      background: oklch(96.8% 0.004 228 / 0.72);
+      min-height: 18px;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
       border: 0;
-      color: var(--text-soft);
-      font-size: 11px;
+      color: rgb(0 0 0 / 0.5);
+      font-size: 12px;
       letter-spacing: 0.01em;
     }
 
     .status-badge[data-status="todo"] {
-      color: oklch(46% 0.014 236);
+      color: rgb(0 0 0 / 0.46);
     }
 
     .status-badge[data-status="in-progress"] {
-      background: #e0f2fe;
-      border-color: oklch(86% 0.03 230);
+      background: transparent;
       color: #0369a1;
       font-weight: 620;
     }

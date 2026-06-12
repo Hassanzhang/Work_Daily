@@ -569,8 +569,9 @@ function progressValue(item) {
 }
 
 .membership-field textarea {
-  min-height: 92px;
+  min-height: 112px;
   resize: vertical;
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.03);
 }
 
 .membership-field input:focus,
@@ -592,8 +593,13 @@ function progressValue(item) {
 .membership-editor-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  padding-top: 8px;
+  gap: 14px 16px;
+  padding-top: 12px;
+}
+
+.membership-extra-grid {
+  grid-template-columns: minmax(0, 1fr) 170px;
+  align-items: start;
 }
 
 .membership-field--full {
@@ -767,14 +773,17 @@ function progressValue(item) {
   display: grid;
   gap: 18px;
   margin-top: 16px;
-  padding-top: 18px;
+  padding: 22px 24px 6px;
   border-top: 1px solid oklch(93% 0.006 228 / 0.7);
+  background: oklch(98.8% 0.004 228 / 0.32);
+  border-radius: 18px;
 }
 
 .membership-editor-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  padding-top: 8px;
 }
 
 .membership-editor-enter-active,
