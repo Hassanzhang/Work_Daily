@@ -591,17 +591,18 @@ function composerNoteLabel() {
 }
 
 .membership-head {
-  margin-bottom: 26px;
+  margin-bottom: 34px;
 }
 
 .membership-composer {
   gap: 12px;
+  margin-bottom: 6px;
 }
 
 .membership-add-row {
-  grid-template-columns: minmax(0, 1fr) 240px auto;
+  grid-template-columns: minmax(0, 1fr) 232px auto;
   align-items: stretch;
-  gap: 10px;
+  gap: 12px;
 }
 
 .membership-field {
@@ -632,7 +633,7 @@ function composerNoteLabel() {
 .membership-composer input::placeholder,
 .membership-field input::placeholder,
 .membership-field textarea::placeholder {
-  color: #bcbcbc;
+  color: #b4b4ba;
   font-weight: 400;
 }
 
@@ -651,7 +652,7 @@ function composerNoteLabel() {
 .membership-editor-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 16px;
+  gap: 16px 16px;
   padding-top: 12px;
 }
 
@@ -663,27 +664,29 @@ function composerNoteLabel() {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 0 4px 0 6px;
+  padding: 10px 4px 2px 6px;
+  border-top: 1px solid oklch(93.5% 0.006 228 / 0.75);
 }
 
 .membership-meta-slot {
   min-width: 0;
+  flex: 0 0 auto;
 }
 
 .membership-meta-slot--note {
-  flex: 1 1 220px;
+  flex: 0 0 auto;
 }
 
 .membership-meta-chip {
-  min-height: 30px;
+  min-height: 32px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 0 12px;
   border-radius: 999px;
-  background: oklch(97.7% 0.004 228 / 0.88);
-  color: rgb(0 0 0 / 0.48);
-  border: 1px solid oklch(91% 0.008 228 / 0.85);
+  background: oklch(98.1% 0.004 228 / 0.88);
+  color: rgb(0 0 0 / 0.46);
+  border: 1px solid oklch(91.8% 0.008 228 / 0.88);
   font-size: 12px;
   font-weight: 520;
   transition:
@@ -710,9 +713,9 @@ function composerNoteLabel() {
   align-items: center;
   gap: 6px;
   border-radius: 999px;
-  background: oklch(99.3% 0.003 228 / 0.96);
-  border: 1px solid oklch(88.8% 0.01 228 / 0.9);
-  box-shadow: 0 6px 14px oklch(28% 0.012 240 / 0.04);
+  background: oklch(99.35% 0.003 228 / 0.96);
+  border: 1px solid oklch(90% 0.01 228 / 0.88);
+  box-shadow: 0 8px 14px oklch(28% 0.012 240 / 0.032);
   padding: 0 10px;
 }
 
@@ -731,11 +734,11 @@ function composerNoteLabel() {
 }
 
 .membership-meta-editor--price {
-  width: 96px;
+  width: 104px;
 }
 
 .membership-meta-editor--note {
-  width: 100%;
+  width: 220px;
   min-width: 220px;
 }
 
@@ -749,7 +752,8 @@ function composerNoteLabel() {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  max-width: 860px;
+  max-width: 900px;
+  margin-top: 4px;
 }
 
 .membership-add-row :deep(.lume-field) {
@@ -757,12 +761,12 @@ function composerNoteLabel() {
 }
 
 .membership-add-row :deep(.lume-field__trigger) {
-  min-height: 44px;
-  border: 0;
-  border-radius: 18px;
+  min-height: 46px;
+  border: 1px solid oklch(93% 0.008 228 / 0.86);
+  border-radius: 16px;
   background: linear-gradient(180deg, oklch(99.7% 0.002 228 / 0.98), oklch(98.8% 0.004 228 / 0.96));
   padding: 0 14px;
-  box-shadow: none;
+  box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.72);
 }
 
 .membership-add-row :deep(.lume-field__trigger:focus-visible) {
@@ -774,23 +778,56 @@ function composerNoteLabel() {
   color: rgb(0 0 0 / 0.28);
 }
 
+.membership-meta-slot :deep(.lume-field) {
+  width: auto;
+}
+
+.membership-meta-slot :deep(.lume-field__trigger) {
+  min-height: 32px;
+  min-width: 156px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid oklch(90% 0.01 228 / 0.88);
+  background: oklch(99.35% 0.003 228 / 0.96);
+  box-shadow: 0 8px 14px oklch(28% 0.012 240 / 0.032);
+  font-size: 12px;
+  color: rgb(0 0 0 / 0.56);
+}
+
+.membership-meta-slot :deep(.lume-field__trigger.is-filled),
+.membership-meta-slot :deep(.lume-field__trigger:hover),
+.membership-meta-slot :deep(.lume-field__trigger:focus-visible) {
+  color: var(--text);
+}
+
+.membership-meta-slot :deep(.lume-field__icon) {
+  width: 14px;
+  height: 14px;
+  color: rgb(0 0 0 / 0.28);
+}
+
+.membership-meta-slot :deep(.lume-panel) {
+  width: 340px;
+}
+
 .membership-list {
-  flex: 1;
-  min-height: 620px;
-  border: 1px solid oklch(91% 0.008 228);
-  border-radius: 16px;
-  background: linear-gradient(180deg, oklch(99.5% 0.003 224 / 0.72), oklch(98.2% 0.005 228 / 0.78));
+  flex: 1 1 auto;
+  min-height: 0;
+  border: 1px solid oklch(92% 0.008 228 / 0.92);
+  border-radius: 20px;
+  background: linear-gradient(180deg, oklch(99.6% 0.003 224 / 0.84), oklch(98.4% 0.004 228 / 0.92));
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-gutter: stable both-edges;
   box-shadow:
-    inset 0 1px 0 oklch(100% 0 0 / 0.42),
-    0 10px 18px oklch(28% 0.016 240 / 0.03);
+    inset 0 1px 0 oklch(100% 0 0 / 0.56),
+    0 12px 22px oklch(28% 0.016 240 / 0.028);
 }
 
 .membership-item {
-  padding: 18px 20px;
+  padding: 20px 22px;
   border-bottom: 1px solid oklch(93.8% 0.006 228);
-  background: oklch(100% 0 0 / 0.24);
+  background: oklch(100% 0 0 / 0.34);
   transition:
     background-color var(--motion-swift) var(--ease-out-quad),
     box-shadow var(--motion-swift) var(--ease-out-quad);
@@ -801,12 +838,12 @@ function composerNoteLabel() {
 }
 
 .membership-item:hover {
-  background: oklch(100% 0 0 / 0.34);
+  background: oklch(100% 0 0 / 0.44);
 }
 
 .membership-item.is-editing {
-  background: oklch(100% 0 0 / 0.42);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.04);
+  background: oklch(100% 0 0 / 0.48);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.035);
 }
 
 .membership-item.is-expired {
@@ -815,7 +852,7 @@ function composerNoteLabel() {
 
 .membership-item-main {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .membership-item-header {
@@ -826,8 +863,8 @@ function composerNoteLabel() {
 }
 
 .membership-item-title {
-  font-size: 16px;
-  font-weight: 620;
+  font-size: 17px;
+  font-weight: 640;
   line-height: 1.3;
   color: var(--text);
 }
@@ -845,8 +882,8 @@ function composerNoteLabel() {
 
 .membership-item-meta .status-badge,
 .membership-item-meta .meta-tag {
-  min-height: 28px;
-  padding: 0 12px;
+  min-height: 30px;
+  padding: 0 13px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 620;
@@ -880,7 +917,7 @@ function composerNoteLabel() {
 .membership-progress {
   display: grid;
   gap: 10px;
-  padding-top: 8px;
+  padding-top: 10px;
 }
 
 .membership-progress-head {
@@ -933,11 +970,11 @@ function composerNoteLabel() {
 
 .membership-editor {
   display: grid;
-  gap: 18px;
+  gap: 22px;
   margin-top: 16px;
-  padding: 22px 24px 6px;
+  padding: 24px 24px 8px;
   border-top: 1px solid oklch(93% 0.006 228 / 0.7);
-  background: oklch(98.8% 0.004 228 / 0.32);
+  background: oklch(98.95% 0.004 228 / 0.42);
   border-radius: 18px;
 }
 
