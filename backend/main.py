@@ -179,10 +179,10 @@ def get_tasks():
                     title,
                     status,
                     priority,
-                    DATE_FORMAT(created_at, '%%Y-%%m-%%d %%H:%%i:%%s') AS created_at,
+                    DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
                     CASE
                         WHEN completed_at IS NULL THEN NULL
-                        ELSE DATE_FORMAT(completed_at, '%%Y-%%m-%%d %%H:%%i:%%s')
+                        ELSE DATE_FORMAT(completed_at, '%Y-%m-%d %H:%i:%s')
                     END AS completed_at
                 FROM {TASKS_TABLE}
                 ORDER BY created_at, id

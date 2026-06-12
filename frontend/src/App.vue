@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, watch } from "vue";
+import AppTabs from "./components/AppTabs.vue";
 import MembershipsView from "./views/MembershipsView.vue";
 import WorkDailyView from "./views/WorkDailyView.vue";
 
@@ -23,19 +24,8 @@ const activeComponent = computed(() =>
 <template>
   <div class="page-viewport">
     <div class="page-canvas app-page">
-      <header class="top-nav-shell" aria-label="页面切换">
-        <div class="top-nav-control">
-          <button
-            v-for="item in pageOptions"
-            :key="item.value"
-            type="button"
-            class="top-nav-chip"
-            :class="{ 'is-active': currentPage === item.value }"
-            @click="currentPage = item.value"
-          >
-            {{ item.label }}
-          </button>
-        </div>
+      <header class="top-nav-shell">
+        <AppTabs v-model="currentPage" :options="pageOptions" />
       </header>
 
       <main class="app-stage">

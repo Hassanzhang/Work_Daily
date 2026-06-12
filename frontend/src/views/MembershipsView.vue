@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
+import DatePickerLume from "../components/DatePickerLume.vue";
 
 const MEMBERSHIPS_API = "/api/memberships";
 const filters = [
@@ -253,7 +254,7 @@ function progressValue(item) {
             <div class="membership-alert-meta">{{ remainingLabel(item) }}</div>
           </article>
         </div>
-        <p v-else class="membership-alert-empty">暂无紧急到期项目。</p>
+        <p v-else class="membership-alert-empty">当前所有会员状态良好，右侧可以继续新增新的订阅记录。</p>
       </section>
 
       <section class="stats-panel membership-stats-panel">
@@ -287,10 +288,7 @@ function progressValue(item) {
             <div class="composer-title">
               <input v-model="composer.name" type="text" maxlength="120" placeholder="会员名称，例如 ChatGPT Plus" />
             </div>
-            <div class="membership-date-field">
-              <label class="membership-inline-label" for="membershipEndDate">到期日期</label>
-              <input id="membershipEndDate" v-model="composer.endDate" type="date" />
-            </div>
+            <DatePickerLume v-model="composer.endDate" label="到期日期" placeholder="选择到期日期" />
             <button class="primary-button" type="button" :disabled="syncPending" @click="addMembership">
               新增会员
             </button>
@@ -303,10 +301,7 @@ function progressValue(item) {
           </div>
 
           <div v-if="expandedComposer" class="membership-extra-grid">
-            <label class="membership-field">
-              <span class="membership-field-label">开通日期</span>
-              <input v-model="composer.startDate" type="date" />
-            </label>
+            <DatePickerLume v-model="composer.startDate" label="开通日期" placeholder="选择开通日期" />
             <label class="membership-field">
               <span class="membership-field-label">价格</span>
               <input v-model="composer.price" type="text" maxlength="32" placeholder="例如 158" />
@@ -388,14 +383,8 @@ function progressValue(item) {
                     <span class="membership-field-label">会员名称</span>
                     <input v-model="editorDraft.name" type="text" maxlength="120" />
                   </label>
-                  <label class="membership-field">
-                    <span class="membership-field-label">开通日期</span>
-                    <input v-model="editorDraft.startDate" type="date" />
-                  </label>
-                  <label class="membership-field">
-                    <span class="membership-field-label">到期日期</span>
-                    <input v-model="editorDraft.endDate" type="date" />
-                  </label>
+                  <DatePickerLume v-model="editorDraft.startDate" label="开通日期" placeholder="选择开通日期" />
+                  <DatePickerLume v-model="editorDraft.endDate" label="到期日期" placeholder="选择到期日期" />
                   <label class="membership-field">
                     <span class="membership-field-label">价格</span>
                     <input v-model="editorDraft.price" type="text" maxlength="32" />
@@ -428,7 +417,7 @@ function progressValue(item) {
 }
 
 .membership-sidebar {
-  gap: 18px;
+  gap: 16px;
 }
 
 .membership-summary-card,
@@ -458,7 +447,7 @@ function progressValue(item) {
 
 .membership-summary-grid {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .summary-metric {
@@ -466,11 +455,11 @@ function progressValue(item) {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  min-height: 48px;
-  padding: 0 14px;
-  border-radius: 14px;
-  background: oklch(99.2% 0.004 224 / 0.88);
-  border: 1px solid oklch(92% 0.008 228);
+  min-height: 36px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
 }
 
 .summary-metric-label {
@@ -479,7 +468,7 @@ function progressValue(item) {
 }
 
 .summary-metric-value {
-  font-size: 18px;
+  font-size: 30px;
   font-weight: 760;
 }
 
@@ -499,7 +488,7 @@ function progressValue(item) {
 .membership-alert-item {
   display: grid;
   gap: 4px;
-  padding: 12px 14px;
+  padding: 11px 13px;
   border-radius: 14px;
   background: oklch(99.2% 0.004 224 / 0.88);
   border: 1px solid oklch(92% 0.008 228);
@@ -522,7 +511,8 @@ function progressValue(item) {
 .membership-alert-empty {
   margin: 0;
   color: var(--text-soft);
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .membership-stats-panel {
@@ -534,24 +524,23 @@ function progressValue(item) {
 }
 
 .membership-head {
-  margin-bottom: 16px;
+  margin-bottom: 26px;
 }
 
 .membership-composer {
-  gap: 10px;
+  gap: 14px;
 }
 
 .membership-add-row {
   grid-template-columns: minmax(0, 1.25fr) minmax(200px, 0.7fr) auto;
+  align-items: stretch;
 }
 
-.membership-date-field,
 .membership-field {
   display: grid;
   gap: 6px;
 }
 
-.membership-inline-label,
 .membership-field-label {
   font-size: 11px;
   color: var(--text-soft);
@@ -559,11 +548,10 @@ function progressValue(item) {
   text-transform: uppercase;
 }
 
-.membership-date-field input,
 .membership-field input,
 .membership-field textarea {
   width: 100%;
-  min-height: 40px;
+  min-height: 44px;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: oklch(99.5% 0.003 224 / 0.96);
@@ -573,12 +561,18 @@ function progressValue(item) {
   outline: none;
 }
 
+.membership-composer input::placeholder,
+.membership-field input::placeholder,
+.membership-field textarea::placeholder {
+  color: #bcbcbc;
+  font-weight: 400;
+}
+
 .membership-field textarea {
   min-height: 92px;
   resize: vertical;
 }
 
-.membership-date-field input:focus,
 .membership-field input:focus,
 .membership-field textarea:focus {
   border-color: oklch(86% 0.03 230);
@@ -599,7 +593,7 @@ function progressValue(item) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  padding-top: 4px;
+  padding-top: 8px;
 }
 
 .membership-field--full {
@@ -610,11 +604,12 @@ function progressValue(item) {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  max-width: 860px;
 }
 
 .membership-list {
   flex: 1;
-  min-height: 520px;
+  min-height: 540px;
   border: 1px solid oklch(91% 0.008 228);
   border-radius: 16px;
   background: linear-gradient(180deg, oklch(99.5% 0.003 224 / 0.72), oklch(98.2% 0.005 228 / 0.78));
@@ -626,7 +621,7 @@ function progressValue(item) {
 }
 
 .membership-item {
-  padding: 16px 18px;
+  padding: 18px 20px;
   border-bottom: 1px solid oklch(93.8% 0.006 228);
   background: oklch(100% 0 0 / 0.24);
   transition:
@@ -653,7 +648,7 @@ function progressValue(item) {
 
 .membership-item-main {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .membership-item-header {
@@ -680,10 +675,44 @@ function progressValue(item) {
   flex-wrap: wrap;
 }
 
+.membership-item-meta .status-badge,
+.membership-item-meta .meta-tag {
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 620;
+}
+
+.membership-item-meta .status-badge[data-status="active"] {
+  background: oklch(96.2% 0.012 220 / 0.96);
+  color: oklch(45% 0.055 236);
+}
+
+.membership-item-meta .status-badge[data-status="expiring"] {
+  background: oklch(97% 0.02 52 / 0.92);
+  color: #d97706;
+}
+
+.membership-item-meta .status-badge[data-status="expired"] {
+  background: oklch(95.5% 0.004 228 / 0.88);
+  color: oklch(54% 0.01 228);
+}
+
+.membership-item-meta .meta-tag {
+  background: oklch(97.8% 0.004 228 / 0.92);
+  color: rgb(0 0 0 / 0.58);
+}
+
+.membership-item-meta .meta-tag:first-of-type {
+  background: oklch(97.2% 0.022 52 / 0.92);
+  color: #c25c07;
+}
+
 .membership-progress {
   display: grid;
-  gap: 8px;
-  padding-top: 4px;
+  gap: 10px;
+  padding-top: 8px;
 }
 
 .membership-progress-head {
@@ -702,23 +731,24 @@ function progressValue(item) {
 
 .membership-progress-track {
   position: relative;
-  height: 16px;
+  height: 8px;
   width: 100%;
   border-radius: 999px;
-  background: oklch(94.6% 0.004 228 / 0.96);
+  background: oklch(95.6% 0.004 228 / 0.96);
   overflow: hidden;
+  box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.55);
 }
 
 .membership-progress-fill {
   width: 100%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, oklch(71% 0.08 232), oklch(66% 0.09 240));
+  background: linear-gradient(90deg, oklch(76% 0.11 232), oklch(68% 0.09 240));
   transition: transform var(--motion-smooth) var(--ease-out-quint);
 }
 
 .membership-progress-fill[data-status="expiring"] {
-  background: linear-gradient(90deg, oklch(71% 0.18 24), oklch(79% 0.16 52));
+  background: linear-gradient(90deg, oklch(78% 0.14 42), oklch(73% 0.18 24));
 }
 
 .membership-progress-fill[data-status="expired"] {
@@ -735,9 +765,9 @@ function progressValue(item) {
 
 .membership-editor {
   display: grid;
-  gap: 14px;
+  gap: 18px;
   margin-top: 16px;
-  padding-top: 16px;
+  padding-top: 18px;
   border-top: 1px solid oklch(93% 0.006 228 / 0.7);
 }
 

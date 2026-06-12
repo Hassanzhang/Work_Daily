@@ -510,20 +510,20 @@
 
     .calendar-shell {
       display: grid;
-      gap: 14px;
+      gap: 16px;
       margin-bottom: 0;
-      padding: 14px 14px 16px;
+      padding: 18px 18px 18px;
       background:
-        linear-gradient(180deg, oklch(27% 0.012 252 / 0.82), oklch(19% 0.01 255 / 0.9)),
-        linear-gradient(180deg, oklch(100% 0 0 / 0.06), transparent 32%);
-      border: 1px solid oklch(100% 0 0 / 0.12);
+        linear-gradient(180deg, oklch(99.35% 0.003 228 / 0.96), oklch(97.8% 0.006 228 / 0.94)),
+        linear-gradient(180deg, oklch(100% 0 0 / 0.42), transparent 26%);
+      border: 1px solid oklch(100% 0 0 / 0.74);
       border-radius: 24px;
       box-shadow:
-        inset 0 1px 0 oklch(100% 0 0 / 0.14),
-        0 20px 38px oklch(18% 0.018 255 / 0.2);
-      backdrop-filter: blur(18px) saturate(1.12);
+        inset 0 1px 0 oklch(100% 0 0 / 0.58),
+        0 18px 34px oklch(28% 0.016 240 / 0.08);
+      backdrop-filter: blur(18px) saturate(1.02);
       overflow: hidden;
-      color: oklch(97.8% 0.004 255);
+      color: var(--text);
     }
 
     .calendar-header,
@@ -548,13 +548,14 @@
       min-height: 28px;
       padding: 0 12px;
       border-radius: 999px;
-      background: oklch(100% 0 0 / 0.92);
-      color: oklch(16% 0.01 250);
+      background: oklch(99.3% 0.003 228 / 0.96);
+      color: oklch(32% 0.012 232);
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      box-shadow: 0 6px 14px oklch(15% 0.02 250 / 0.2);
+      border: 1px solid oklch(91% 0.008 228);
+      box-shadow: 0 6px 14px oklch(28% 0.012 240 / 0.06);
     }
 
     .calendar-link {
@@ -563,7 +564,7 @@
       border: 0;
       border-radius: 0;
       background: transparent;
-      color: oklch(96% 0.004 255 / 0.68);
+      color: oklch(44% 0.012 232 / 0.76);
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.03em;
@@ -571,7 +572,7 @@
     }
 
     .calendar-link:hover {
-      color: oklch(99.2% 0.004 255);
+      color: var(--text);
     }
 
     .calendar-month-row {
@@ -584,7 +585,7 @@
       line-height: 0.96;
       font-weight: 720;
       letter-spacing: -0.05em;
-      color: oklch(99% 0.004 255);
+      color: oklch(23% 0.012 236);
     }
 
     .nav-group,
@@ -643,9 +644,9 @@
       min-height: 28px;
       padding: 0;
       font-size: 14px;
-      color: oklch(94% 0.004 255 / 0.7);
-      border-color: oklch(100% 0 0 / 0.08);
-      background: oklch(100% 0 0 / 0.06);
+      color: oklch(44% 0.01 232 / 0.76);
+      border-color: oklch(90% 0.008 228 / 0.9);
+      background: oklch(99.2% 0.004 224 / 0.84);
     }
 
     .calendar-shell .icon-button:hover,
@@ -726,7 +727,7 @@
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: oklch(94% 0.004 255 / 0.48);
+      color: oklch(58% 0.008 228 / 0.72);
       padding: 0;
     }
 
@@ -740,7 +741,7 @@
       padding: 0;
       border-radius: 999px;
       border: 1px solid transparent;
-      color: oklch(66% 0.006 248 / 0.78);
+      color: oklch(54% 0.008 232 / 0.74);
       background: transparent;
       font-size: 14px;
       font-weight: 620;
@@ -753,32 +754,32 @@
     }
 
     .day-button:hover {
-      background: oklch(100% 0 0 / 0.12);
-      border-color: oklch(100% 0 0 / 0.08);
+      background: oklch(96.8% 0.006 228 / 0.88);
+      border-color: oklch(90% 0.008 228 / 0.66);
     }
 
     .day-button.is-outside {
-      color: oklch(97.5% 0.002 248 / 0.12);
+      color: oklch(74% 0.004 228 / 0.48);
       font-weight: 500;
     }
 
     .day-button.is-today {
-      background: oklch(100% 0 0 / 0.08);
-      border-color: oklch(100% 0 0 / 0.12);
-      color: oklch(99.2% 0.004 255);
+      background: oklch(98.2% 0.012 48 / 0.86);
+      border-color: oklch(91% 0.02 52 / 0.78);
+      color: oklch(63% 0.14 36);
       font-weight: 660;
       box-shadow: none;
     }
 
     .day-button.is-complete {
-      color: oklch(99.2% 0.004 255);
+      color: oklch(24% 0.012 236);
       font-weight: 660;
     }
 
     .day-button.has-open:not(.is-selected) {
       color: oklch(80% 0.18 40);
       font-weight: 700;
-      text-shadow: 0 0 10px oklch(78% 0.14 40 / 0.18);
+      text-shadow: none;
     }
 
     .day-button.is-selected {
@@ -806,17 +807,17 @@
 
     .stat-block {
       position: relative;
-      padding: 10px 10px 12px;
-      background: linear-gradient(180deg, oklch(99.1% 0.004 224 / 0.88), oklch(97.2% 0.006 228 / 0.88));
+      padding: 10px 8px 10px;
+      background: linear-gradient(180deg, oklch(99.5% 0.003 224 / 0.56), oklch(98.2% 0.005 228 / 0.56));
       border-radius: 12px;
-      border: 1px solid oklch(90% 0.01 228);
-      height: 84px;
+      border: 1px solid oklch(92% 0.008 228 / 0.72);
+      height: 78px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.45);
+      gap: 6px;
+      box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.38);
       overflow: hidden;
     }
 
@@ -831,7 +832,7 @@
 
     .stat-value {
       margin: 0;
-      font-size: 24px;
+      font-size: 31px;
       line-height: 1;
       letter-spacing: -0.04em;
       font-weight: 820;
@@ -842,8 +843,8 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 40px;
-      min-height: 40px;
+      min-width: 46px;
+      min-height: 46px;
       padding: 0 4px;
     }
 
@@ -889,8 +890,8 @@
       content: "";
       position: absolute;
       inset: 50% auto auto 50%;
-      width: max(40px, calc(100% + 12px));
-      height: 40px;
+      width: max(46px, calc(100% + 14px));
+      height: 46px;
       transform: translate(-50%, -50%);
       border-radius: 999px;
       background: transparent;
@@ -953,20 +954,20 @@
 
     .hero-title {
       margin: 0;
-      font-size: 30px;
-      line-height: 1.06;
+      font-size: 28px;
+      line-height: 1.08;
       letter-spacing: -0.04em;
-      font-weight: 655;
+      font-weight: 700;
       max-width: none;
     }
 
     .hero-copy {
       margin: 0;
       max-width: 28ch;
-      color: oklch(42% 0.02 232);
-      line-height: 1.35;
-      font-size: var(--meta-size);
-      font-weight: 620;
+      color: #666666;
+      line-height: 1.32;
+      font-size: 13px;
+      font-weight: 500;
       letter-spacing: -0.01em;
     }
 
@@ -1019,7 +1020,8 @@
     }
 
     .add-shell input::placeholder {
-      color: oklch(56% 0.01 228);
+      color: #a8a8a8;
+      font-weight: 400;
     }
 
     .add-shell input:focus {
@@ -1041,10 +1043,9 @@
       background: linear-gradient(135deg, oklch(72% 0.23 2), oklch(79% 0.18 55));
       color: oklch(99.2% 0.004 255);
       box-shadow:
-        inset 0 1px 0 oklch(100% 0 0 / 0.28),
-        0 10px 18px oklch(66% 0.16 28 / 0.18),
-        0 0 26px oklch(72% 0.18 36 / 0.24),
-        0 0 44px oklch(74% 0.14 24 / 0.12);
+        inset 0 1px 0 oklch(100% 0 0 / 0.24),
+        0 8px 14px oklch(66% 0.16 28 / 0.12),
+        0 0 18px oklch(72% 0.18 36 / 0.16);
     }
 
     .composer-title {
@@ -1142,9 +1143,9 @@
     .primary-button:hover {
       transform: translateY(-2px);
       box-shadow:
-        inset 0 1px 0 oklch(100% 0 0 / 0.24),
-        0 14px 24px oklch(28% 0.018 240 / 0.16),
-        0 0 30px oklch(72% 0.17 34 / 0.18);
+        inset 0 1px 0 oklch(100% 0 0 / 0.22),
+        0 12px 20px oklch(28% 0.018 240 / 0.11),
+        0 0 22px oklch(72% 0.17 34 / 0.15);
     }
 
     .primary-button:active {
@@ -1162,7 +1163,7 @@
       justify-content: space-between;
       align-items: center;
       gap: var(--space-4);
-      margin: 24px 0 12px;
+      margin: 28px 0 16px;
       flex-wrap: wrap;
       padding-top: 8px;
       border-top: 1px solid oklch(92% 0.008 228 / 0.9);
@@ -1574,7 +1575,7 @@
     .task-meta {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       flex-wrap: wrap;
       color: var(--text-soft);
       font-size: 12px;
@@ -1585,7 +1586,7 @@
       align-items: center;
       gap: 4px;
       min-height: 20px;
-      padding: 0 8px;
+      padding: 0 10px;
       border-radius: 999px;
       background: rgb(0 0 0 / 0.03);
       border: 0;
