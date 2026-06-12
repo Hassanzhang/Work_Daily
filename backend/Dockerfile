@@ -9,6 +9,6 @@ RUN pip install \
     --trusted-host mirrors.aliyun.com \
     -r requirements.txt
 
-COPY main.py .
+COPY . .
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,41 +1,16 @@
-import os
 import time
 from datetime import date, datetime
-from urllib.parse import urlparse
 
 import pymysql
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from db import MYSQL_DATABASE, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, get_connection
 
 app = FastAPI()
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "mysql+pymysql://root:hassan0121@mysql:3306/todo",
-)
 TASKS_TABLE = "todo_data"
 MEMBERSHIPS_TABLE = "todo_vip"
 LEGACY_MEMBERSHIPS_TABLE = "membership_data"
-
-
-def parse_database_url() -> dict[str, str | int]:
-    parsed = urlparse(DATABASE_URL)
-    if parsed.scheme != "mysql+pymysql":
-        raise ValueError(f"Unsupported DATABASE_URL scheme: {parsed.scheme}")
-    return {
-        "host": parsed.hostname or "mysql",
-        "port": parsed.port or 3306,
-        "user": parsed.username or "root",
-        "password": parsed.password or "",
-        "database": (parsed.path or "/todo").lstrip("/") or "todo",
-        "charset": "utf8mb4",
-        "cursorclass": pymysql.cursors.DictCursor,
-        "autocommit": False,
-    }
-
-
-def get_connection():
-    return pymysql.connect(**parse_database_url())
 
 
 def table_exists(cursor, table_name: str) -> bool:
@@ -144,7 +119,7 @@ class Membership(BaseModel):
 @app.on_event("startup")
 def on_startup() -> None:
     last_error = None
-    for _ in range(20):
+    for _ in range(60):
         try:
             init_db()
             return
@@ -158,6 +133,31 @@ def on_startup() -> None:
 @app.get("/api/health")
 def health():
     return {"ok": True}
+
+
+@app.get("/api/db-health")
+def db_health():
+    result = {
+        "ok": False,
+        "host": MYSQL_HOST,
+        "port": MYSQL_PORT,
+        "user": MYSQL_USER,
+        "database": MYSQL_DATABASE,
+        "tables": {},
+    }
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT 1 AS ok")
+                cursor.fetchone()
+                for table_name in (TASKS_TABLE, MEMBERSHIPS_TABLE, LEGACY_MEMBERSHIPS_TABLE):
+                    exists = table_exists(cursor, table_name)
+                    count = table_row_count(cursor, table_name) if exists else 0
+                    result["tables"][table_name] = {"exists": exists, "count": count}
+        result["ok"] = True
+    except Exception as error:
+        result["error"] = str(error)
+    return result
 
 
 @app.get("/api/tasks")
