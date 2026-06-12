@@ -45,30 +45,8 @@ def normalize_date_text(value: str | None) -> str | None:
 def init_db() -> None:
     with get_connection() as conn:
         with conn.cursor() as cursor:
-            cursor.execute(
-                f"""
-                CREATE TABLE IF NOT EXISTS {TASKS_TABLE} (
-                    id VARCHAR(64) PRIMARY KEY,
-                    title TEXT NOT NULL,
-                    status VARCHAR(32) NOT NULL,
-                    priority VARCHAR(32) NOT NULL,
-                    created_at DATETIME NOT NULL,
-                    completed_at DATETIME NULL
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-                """
-            )
-            cursor.execute(
-                f"""
-                CREATE TABLE IF NOT EXISTS {MEMBERSHIPS_TABLE} (
-                    id VARCHAR(64) PRIMARY KEY,
-                    name VARCHAR(255) NOT NULL,
-                    start_date DATE NOT NULL,
-                    end_date DATE NOT NULL,
-                    price VARCHAR(64) NULL,
-                    note TEXT NULL
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-                """
-            )
+            ensure_tasks_table(cursor)
+            ensure_memberships_table(cursor)
             if (
                 MEMBERSHIPS_TABLE != LEGACY_MEMBERSHIPS_TABLE
                 and table_exists(cursor, LEGACY_MEMBERSHIPS_TABLE)
@@ -96,6 +74,36 @@ def init_db() -> None:
                     """
                 )
         conn.commit()
+
+
+def ensure_tasks_table(cursor) -> None:
+    cursor.execute(
+        f"""
+        CREATE TABLE IF NOT EXISTS {TASKS_TABLE} (
+            id VARCHAR(64) PRIMARY KEY,
+            title TEXT NOT NULL,
+            status VARCHAR(32) NOT NULL,
+            priority VARCHAR(32) NOT NULL,
+            created_at DATETIME NOT NULL,
+            completed_at DATETIME NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """
+    )
+
+
+def ensure_memberships_table(cursor) -> None:
+    cursor.execute(
+        f"""
+        CREATE TABLE IF NOT EXISTS {MEMBERSHIPS_TABLE} (
+            id VARCHAR(64) PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            start_date DATE NOT NULL,
+            end_date DATE NOT NULL,
+            price VARCHAR(64) NULL,
+            note TEXT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """
+    )
 
 
 class Task(BaseModel):
@@ -255,6 +263,7 @@ def compute_membership_view(member: dict) -> dict:
 def get_memberships():
     with get_connection() as conn:
         with conn.cursor() as cursor:
+            ensure_memberships_table(cursor)
             cursor.execute(
                 f"""
                 SELECT
@@ -269,6 +278,7 @@ def get_memberships():
                 """
             )
             rows = cursor.fetchall()
+        conn.commit()
     return [compute_membership_view(row) for row in rows]
 
 
@@ -276,6 +286,7 @@ def get_memberships():
 def save_memberships(memberships: list[Membership]):
     with get_connection() as conn:
         with conn.cursor() as cursor:
+            ensure_memberships_table(cursor)
             cursor.execute(f"DELETE FROM {MEMBERSHIPS_TABLE}")
             for membership in memberships:
                 cursor.execute(
