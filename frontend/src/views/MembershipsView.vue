@@ -410,7 +410,14 @@ function composerNoteLabel() {
           >
             <div class="membership-item-main">
               <div class="membership-item-header">
-                <div class="membership-item-title">{{ item.name }}</div>
+                <div class="membership-item-title-group">
+                  <div class="membership-item-title">{{ item.name }}</div>
+                  <div class="membership-item-meta">
+                    <span class="status-badge" :data-status="item.status">{{ statusLabel(item.status) }}</span>
+                    <span class="meta-tag">{{ remainingLabel(item) }}</span>
+                  </div>
+                </div>
+                <div v-if="item.price" class="membership-item-price">{{ formatPrice(item.price) }}</div>
                 <div class="task-actions membership-actions">
                   <button type="button" class="text-button" @click="editingId === item.id ? closeEditor() : openEditor(item)">
                     {{ editingId === item.id ? "收起" : "编辑" }}
@@ -418,28 +425,22 @@ function composerNoteLabel() {
                   <button type="button" class="text-button danger-button" @click="removeMembership(item.id)">删除</button>
                 </div>
               </div>
-              <div class="membership-item-meta">
-                <span class="status-badge" :data-status="item.status">{{ statusLabel(item.status) }}</span>
-                <span class="meta-tag">{{ remainingLabel(item) }}</span>
-                <span v-if="item.price" class="meta-tag">{{ formatPrice(item.price) }}</span>
-              </div>
-              <div class="membership-progress">
-                <div class="membership-progress-head">
-                  <span class="membership-progress-label">到期进度</span>
+              <div class="membership-item-timeline">
+                <div class="membership-item-dates">
+                  <span>{{ formatDate(item.start_date) }}</span>
+                  <span>—</span>
+                  <span>{{ formatDate(item.end_date) }}</span>
+                </div>
+                <div class="membership-progress-inline">
+                  <div class="membership-progress-track">
+                    <div
+                      class="membership-progress-fill"
+                      :data-status="item.status"
+                      :style="{ transform: `translateX(-${100 - Math.max(0, Math.min(100, item.progress_percent ?? 0))}%)` }"
+                    ></div>
+                  </div>
                   <span class="membership-progress-value">{{ progressValue(item) }}</span>
                 </div>
-                <div class="membership-progress-track">
-                  <div
-                    class="membership-progress-fill"
-                    :data-status="item.status"
-                    :style="{ transform: `translateX(-${100 - Math.max(0, Math.min(100, item.progress_percent ?? 0))}%)` }"
-                  ></div>
-                </div>
-              </div>
-              <div class="membership-item-dates">
-                <span>{{ formatDate(item.start_date) }}</span>
-                <span>—</span>
-                <span>{{ formatDate(item.end_date) }}</span>
               </div>
             </div>
 
@@ -597,6 +598,13 @@ function composerNoteLabel() {
 .membership-composer {
   gap: 12px;
   margin-bottom: 6px;
+  padding: 14px 14px 12px;
+  border: 1px solid oklch(92% 0.008 228 / 0.82);
+  border-radius: 24px;
+  background: linear-gradient(180deg, oklch(99.55% 0.003 228 / 0.96), oklch(98.1% 0.005 228 / 0.94));
+  box-shadow:
+    inset 0 1px 0 oklch(100% 0 0 / 0.76),
+    0 14px 26px oklch(28% 0.014 240 / 0.032);
 }
 
 .membership-add-row {
@@ -664,8 +672,7 @@ function composerNoteLabel() {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 10px 4px 2px 6px;
-  border-top: 1px solid oklch(93.5% 0.006 228 / 0.75);
+  padding: 10px 2px 0 2px;
 }
 
 .membership-meta-slot {
@@ -753,7 +760,7 @@ function composerNoteLabel() {
   display: flex;
   flex-direction: column;
   max-width: 900px;
-  margin-top: 4px;
+  margin-top: 0;
 }
 
 .membership-add-row :deep(.lume-field) {
@@ -811,21 +818,49 @@ function composerNoteLabel() {
 }
 
 .membership-list {
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 0 0 520px;
+  min-height: 520px;
+  height: 520px;
   border: 1px solid oklch(92% 0.008 228 / 0.92);
   border-radius: 20px;
   background: linear-gradient(180deg, oklch(99.6% 0.003 224 / 0.84), oklch(98.4% 0.004 228 / 0.92));
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-gutter: stable both-edges;
+  scrollbar-color: rgb(0 0 0 / 0) transparent;
+  scrollbar-width: thin;
   box-shadow:
     inset 0 1px 0 oklch(100% 0 0 / 0.56),
     0 12px 22px oklch(28% 0.016 240 / 0.028);
 }
 
+.membership-list::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.membership-list::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 999px;
+}
+
+.membership-list::-webkit-scrollbar-thumb {
+  background: rgb(0 0 0 / 0);
+  border-radius: 999px;
+  border: 0;
+  transition: background-color 300ms ease, opacity 300ms ease;
+}
+
+.membership-list:hover::-webkit-scrollbar-thumb {
+  background: rgb(0 0 0 / 0.15);
+}
+
+.membership-list:hover::-webkit-scrollbar-thumb:hover {
+  background: rgb(0 0 0 / 0.3);
+}
+
 .membership-item {
-  padding: 20px 22px;
+  padding: 16px 20px;
   border-bottom: 1px solid oklch(93.8% 0.006 228);
   background: oklch(100% 0 0 / 0.34);
   transition:
@@ -852,7 +887,7 @@ function composerNoteLabel() {
 
 .membership-item-main {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .membership-item-header {
@@ -862,15 +897,30 @@ function composerNoteLabel() {
   gap: 14px;
 }
 
+.membership-item-title-group {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
 .membership-item-title {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 640;
-  line-height: 1.3;
+  line-height: 1.25;
   color: var(--text);
 }
 
 .membership-actions {
   min-width: 88px;
+}
+
+.membership-item-price {
+  align-self: center;
+  white-space: nowrap;
+  color: rgb(0 0 0 / 0.58);
+  font-size: 13px;
+  font-weight: 560;
 }
 
 .membership-item-meta {
@@ -882,10 +932,10 @@ function composerNoteLabel() {
 
 .membership-item-meta .status-badge,
 .membership-item-meta .meta-tag {
-  min-height: 30px;
-  padding: 0 13px;
+  min-height: 26px;
+  padding: 0 11px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 620;
 }
 
@@ -914,34 +964,37 @@ function composerNoteLabel() {
   color: #c25c07;
 }
 
-.membership-progress {
-  display: grid;
-  gap: 10px;
-  padding-top: 10px;
-}
-
-.membership-progress-head {
+.membership-item-timeline {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 18px;
+  padding-top: 2px;
 }
 
-.membership-progress-label,
+.membership-progress-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
 .membership-progress-value {
   color: var(--text-soft);
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .membership-progress-track {
   position: relative;
   height: 8px;
-  width: 100%;
+  width: 192px;
   border-radius: 999px;
   background: oklch(95.6% 0.004 228 / 0.96);
   overflow: hidden;
   box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.55);
+  flex: 0 0 192px;
 }
 
 .membership-progress-fill {
@@ -965,7 +1018,8 @@ function composerNoteLabel() {
   align-items: center;
   gap: 6px;
   color: #a0a0a0;
-  font-size: 12px;
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 .membership-editor {
@@ -1000,5 +1054,8 @@ function composerNoteLabel() {
 
 .membership-empty {
   min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
 }
 </style>
