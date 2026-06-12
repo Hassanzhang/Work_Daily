@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import DatePickerLume from "../components/DatePickerLume.vue";
 
 const MEMBERSHIPS_API = "/api/memberships";
@@ -12,9 +12,9 @@ const filters = [
 
 const memberships = ref([]);
 const currentFilter = ref("all");
-const expandedComposer = ref(false);
 const editingId = ref(null);
 const syncPending = ref(false);
+const composerMetaField = ref(null);
 
 const composer = reactive({
   name: "",
@@ -85,8 +85,17 @@ function resetComposer() {
   composer.startDate = "";
   composer.price = "";
   composer.note = "";
-  expandedComposer.value = false;
+  composerMetaField.value = null;
 }
+
+watch(
+  () => composer.startDate,
+  (value) => {
+    if (value && composerMetaField.value === "startDate") {
+      composerMetaField.value = null;
+    }
+  }
+);
 
 async function hydrateMemberships() {
   try {
@@ -206,6 +215,31 @@ function remainingLabel(item) {
 function progressValue(item) {
   return `${Math.max(0, Math.min(100, item.progress_percent ?? 0))}%`;
 }
+
+function openComposerMeta(field) {
+  composerMetaField.value = field;
+}
+
+function closeComposerMeta(field) {
+  if (composerMetaField.value === field) {
+    composerMetaField.value = null;
+  }
+}
+
+function submitComposerMeta(field) {
+  if (field === "price") {
+    composer.price = composer.price.trim();
+  }
+  if (field === "note") {
+    composer.note = composer.note.trim();
+  }
+  closeComposerMeta(field);
+}
+
+function composerNoteLabel() {
+  if (!composer.note.trim()) return "添加备注...";
+  return composer.note.trim().length > 18 ? `${composer.note.trim().slice(0, 18)}...` : composer.note.trim();
+}
 </script>
 
 <template>
@@ -288,28 +322,61 @@ function progressValue(item) {
             <div class="composer-title">
               <input v-model="composer.name" type="text" maxlength="120" placeholder="会员名称，例如 ChatGPT Plus" />
             </div>
-            <DatePickerLume v-model="composer.endDate" label="到期日期" placeholder="选择到期日期" />
+            <DatePickerLume v-model="composer.endDate" placeholder="到期日期" />
             <button class="primary-button" type="button" :disabled="syncPending" @click="addMembership">
               新增会员
             </button>
           </div>
 
-          <div class="membership-composer-extra">
-            <button class="text-button membership-expand" type="button" @click="expandedComposer = !expandedComposer">
-              {{ expandedComposer ? "收起字段" : "更多字段" }}
-            </button>
-          </div>
+          <div class="membership-meta-row" aria-label="会员附加信息">
+            <div class="membership-meta-slot">
+              <template v-if="composerMetaField === 'price'">
+                <label class="membership-meta-editor membership-meta-editor--price">
+                  <span class="membership-meta-editor-prefix">¥</span>
+                  <input
+                    v-model="composer.price"
+                    type="text"
+                    maxlength="32"
+                    placeholder="价格"
+                    @keydown.enter.prevent="submitComposerMeta('price')"
+                    @blur="submitComposerMeta('price')"
+                  />
+                </label>
+              </template>
+              <button v-else type="button" class="membership-meta-chip" @click="openComposerMeta('price')">
+                <span class="membership-meta-chip-plus">+</span>
+                <span>{{ composer.price.trim() ? `¥${composer.price.trim()}` : "价格" }}</span>
+              </button>
+            </div>
 
-          <div v-if="expandedComposer" class="membership-extra-grid">
-            <DatePickerLume v-model="composer.startDate" label="开通日期" placeholder="选择开通日期" />
-            <label class="membership-field">
-              <span class="membership-field-label">价格</span>
-              <input v-model="composer.price" type="text" maxlength="32" placeholder="例如 158" />
-            </label>
-            <label class="membership-field membership-field--full">
-              <span class="membership-field-label">备注</span>
-              <textarea v-model="composer.note" rows="3" maxlength="240" placeholder="账号归属、购买渠道等"></textarea>
-            </label>
+            <div class="membership-meta-slot">
+              <template v-if="composerMetaField === 'startDate'">
+                <DatePickerLume v-model="composer.startDate" placeholder="选择开通日期" />
+              </template>
+              <button v-else type="button" class="membership-meta-chip" @click="openComposerMeta('startDate')">
+                <span class="membership-meta-chip-plus">+</span>
+                <span>{{ composer.startDate ? formatDate(composer.startDate) : "开通日期" }}</span>
+              </button>
+            </div>
+
+            <div class="membership-meta-slot membership-meta-slot--note">
+              <template v-if="composerMetaField === 'note'">
+                <label class="membership-meta-editor membership-meta-editor--note">
+                  <input
+                    v-model="composer.note"
+                    type="text"
+                    maxlength="240"
+                    placeholder="账号归属、购买渠道等"
+                    @keydown.enter.prevent="submitComposerMeta('note')"
+                    @blur="submitComposerMeta('note')"
+                  />
+                </label>
+              </template>
+              <button v-else type="button" class="membership-meta-chip" @click="openComposerMeta('note')">
+                <span class="membership-meta-chip-plus">+</span>
+                <span>{{ composerNoteLabel() }}</span>
+              </button>
+            </div>
           </div>
         </section>
       </header>
@@ -528,12 +595,13 @@ function progressValue(item) {
 }
 
 .membership-composer {
-  gap: 14px;
+  gap: 12px;
 }
 
 .membership-add-row {
-  grid-template-columns: minmax(0, 1.25fr) minmax(200px, 0.7fr) auto;
+  grid-template-columns: minmax(0, 1fr) 240px auto;
   align-items: stretch;
+  gap: 10px;
 }
 
 .membership-field {
@@ -580,16 +648,6 @@ function progressValue(item) {
   box-shadow: 0 0 0 4px oklch(94% 0.02 230 / 0.55);
 }
 
-.membership-composer-extra {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.membership-expand {
-  color: rgb(0 0 0 / 0.45);
-}
-
-.membership-extra-grid,
 .membership-editor-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -597,13 +655,94 @@ function progressValue(item) {
   padding-top: 12px;
 }
 
-.membership-extra-grid {
-  grid-template-columns: minmax(0, 1fr) 170px;
-  align-items: start;
-}
-
 .membership-field--full {
   grid-column: 1 / -1;
+}
+
+.membership-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 4px 0 6px;
+}
+
+.membership-meta-slot {
+  min-width: 0;
+}
+
+.membership-meta-slot--note {
+  flex: 1 1 220px;
+}
+
+.membership-meta-chip {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: oklch(97.7% 0.004 228 / 0.88);
+  color: rgb(0 0 0 / 0.48);
+  border: 1px solid oklch(91% 0.008 228 / 0.85);
+  font-size: 12px;
+  font-weight: 520;
+  transition:
+    border-color var(--motion-swift) var(--ease-out-quad),
+    background-color var(--motion-swift) var(--ease-out-quad),
+    color var(--motion-swift) var(--ease-out-quad);
+}
+
+.membership-meta-chip:hover {
+  color: var(--text);
+  border-color: oklch(86% 0.012 228);
+  background: oklch(98.6% 0.004 228 / 0.94);
+}
+
+.membership-meta-chip-plus {
+  color: rgb(0 0 0 / 0.35);
+  font-size: 13px;
+  font-weight: 640;
+}
+
+.membership-meta-editor {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  background: oklch(99.3% 0.003 228 / 0.96);
+  border: 1px solid oklch(88.8% 0.01 228 / 0.9);
+  box-shadow: 0 6px 14px oklch(28% 0.012 240 / 0.04);
+  padding: 0 10px;
+}
+
+.membership-meta-editor input {
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 12px;
+}
+
+.membership-meta-editor input:focus {
+  box-shadow: none;
+  border: 0;
+}
+
+.membership-meta-editor--price {
+  width: 96px;
+}
+
+.membership-meta-editor--note {
+  width: 100%;
+  min-width: 220px;
+}
+
+.membership-meta-editor-prefix {
+  color: rgb(0 0 0 / 0.42);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .membership-list-shell {
@@ -613,9 +752,31 @@ function progressValue(item) {
   max-width: 860px;
 }
 
+.membership-add-row :deep(.lume-field) {
+  align-self: stretch;
+}
+
+.membership-add-row :deep(.lume-field__trigger) {
+  min-height: 44px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(180deg, oklch(99.7% 0.002 228 / 0.98), oklch(98.8% 0.004 228 / 0.96));
+  padding: 0 14px;
+  box-shadow: none;
+}
+
+.membership-add-row :deep(.lume-field__trigger:focus-visible) {
+  border: 0;
+  box-shadow: 0 0 0 4px oklch(94% 0.02 230 / 0.42);
+}
+
+.membership-add-row :deep(.lume-field__icon) {
+  color: rgb(0 0 0 / 0.28);
+}
+
 .membership-list {
   flex: 1;
-  min-height: 540px;
+  min-height: 620px;
   border: 1px solid oklch(91% 0.008 228);
   border-radius: 16px;
   background: linear-gradient(180deg, oklch(99.5% 0.003 224 / 0.72), oklch(98.2% 0.005 228 / 0.78));
@@ -668,6 +829,7 @@ function progressValue(item) {
   font-size: 16px;
   font-weight: 620;
   line-height: 1.3;
+  color: var(--text);
 }
 
 .membership-actions {
@@ -691,27 +853,27 @@ function progressValue(item) {
 }
 
 .membership-item-meta .status-badge[data-status="active"] {
-  background: oklch(96.2% 0.012 220 / 0.96);
-  color: oklch(45% 0.055 236);
+  background: rgb(34 197 94 / 0.08);
+  color: #16a34a;
 }
 
 .membership-item-meta .status-badge[data-status="expiring"] {
-  background: oklch(97% 0.02 52 / 0.92);
+  background: rgb(245 158 11 / 0.08);
   color: #d97706;
 }
 
 .membership-item-meta .status-badge[data-status="expired"] {
-  background: oklch(95.5% 0.004 228 / 0.88);
+  background: rgb(120 120 120 / 0.08);
   color: oklch(54% 0.01 228);
 }
 
 .membership-item-meta .meta-tag {
-  background: oklch(97.8% 0.004 228 / 0.92);
-  color: rgb(0 0 0 / 0.58);
+  background: rgb(120 120 120 / 0.06);
+  color: rgb(0 0 0 / 0.5);
 }
 
 .membership-item-meta .meta-tag:first-of-type {
-  background: oklch(97.2% 0.022 52 / 0.92);
+  background: rgb(245 158 11 / 0.08);
   color: #c25c07;
 }
 
@@ -749,12 +911,12 @@ function progressValue(item) {
   width: 100%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, oklch(76% 0.11 232), oklch(68% 0.09 240));
+  background: linear-gradient(90deg, oklch(72% 0.23 2), oklch(79% 0.18 55));
   transition: transform var(--motion-smooth) var(--ease-out-quint);
 }
 
 .membership-progress-fill[data-status="expiring"] {
-  background: linear-gradient(90deg, oklch(78% 0.14 42), oklch(73% 0.18 24));
+  background: linear-gradient(90deg, oklch(72% 0.23 2), oklch(79% 0.18 55));
 }
 
 .membership-progress-fill[data-status="expired"] {
@@ -765,7 +927,7 @@ function progressValue(item) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--text-soft);
+  color: #a0a0a0;
   font-size: 12px;
 }
 

@@ -376,14 +376,16 @@ export function initWorkDaily(rootEl) {
               <div class="task-body">
                 <h4 class="task-title ${doneClass}">${titleValue}</h4>
                 <div class="task-meta">
-                  ${statusMeta}
-                  <span class="meta-tag meta-priority" data-priority="${task.priority}">
-                    <span class="meta-priority-value">
-                      <span class="meta-priority-dot" aria-hidden="true"></span>
-                      <span>${priorityLabel(task.priority)}</span>
+                  <div class="task-meta-cluster">
+                    ${statusMeta}
+                    <span class="meta-tag meta-priority" data-priority="${task.priority}">
+                      <span class="meta-priority-value">
+                        <span class="meta-priority-dot" aria-hidden="true"></span>
+                        <span>${priorityLabel(task.priority)}</span>
+                      </span>
                     </span>
-                  </span>
-                  <span class="meta-tag">${dateLabel}</span>
+                  </div>
+                  <span class="meta-tag meta-date">${dateLabel}</span>
                 </div>
               </div>
               <div class="task-actions">

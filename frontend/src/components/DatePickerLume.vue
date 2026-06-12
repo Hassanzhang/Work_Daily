@@ -480,9 +480,9 @@ function isSameDate(left, right) {
 
 .lume-day-cell.is-selected {
   border-color: transparent;
-  background: linear-gradient(135deg, oklch(82% 0.18 42), oklch(76% 0.2 22));
+  background: linear-gradient(135deg, oklch(72% 0.23 2), oklch(79% 0.18 55));
   color: white;
-  box-shadow: 0 12px 22px oklch(72% 0.18 28 / 0.22);
+  box-shadow: 0 12px 22px oklch(72% 0.18 28 / 0.18);
 }
 
 .lume-popover-enter-active,
