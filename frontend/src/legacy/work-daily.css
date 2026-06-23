@@ -1207,7 +1207,7 @@
       overflow-y: auto;
       overscroll-behavior: contain;
       scrollbar-gutter: stable both-edges;
-      scrollbar-color: rgb(0 0 0 / 0) transparent;
+      scrollbar-color: rgb(0 0 0 / 0.16) transparent;
       scrollbar-width: thin;
       background: linear-gradient(180deg, oklch(99.6% 0.003 224 / 0.86), oklch(98.4% 0.004 228 / 0.92));
       box-shadow:
@@ -1240,7 +1240,7 @@
     }
 
     .task-list::-webkit-scrollbar-thumb {
-      background: rgb(0 0 0 / 0);
+      background: rgb(0 0 0 / 0.16);
       border-radius: 999px;
       border: 0;
       transition: background-color 300ms ease, opacity 300ms ease;
@@ -1248,7 +1248,7 @@
 
     .task-list:hover::-webkit-scrollbar-thumb,
     .task-list.is-scrolling::-webkit-scrollbar-thumb {
-      background: rgb(0 0 0 / 0.15);
+      background: rgb(0 0 0 / 0.22);
     }
 
     .task-list:hover::-webkit-scrollbar-thumb:hover,

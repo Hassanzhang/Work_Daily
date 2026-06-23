@@ -827,7 +827,7 @@ function composerNoteLabel() {
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-gutter: stable both-edges;
-  scrollbar-color: rgb(0 0 0 / 0) transparent;
+  scrollbar-color: rgb(0 0 0 / 0.16) transparent;
   scrollbar-width: thin;
   box-shadow:
     inset 0 1px 0 oklch(100% 0 0 / 0.56),
@@ -845,14 +845,14 @@ function composerNoteLabel() {
 }
 
 .membership-list::-webkit-scrollbar-thumb {
-  background: rgb(0 0 0 / 0);
+  background: rgb(0 0 0 / 0.16);
   border-radius: 999px;
   border: 0;
   transition: background-color 300ms ease, opacity 300ms ease;
 }
 
 .membership-list:hover::-webkit-scrollbar-thumb {
-  background: rgb(0 0 0 / 0.15);
+  background: rgb(0 0 0 / 0.22);
 }
 
 .membership-list:hover::-webkit-scrollbar-thumb:hover {
