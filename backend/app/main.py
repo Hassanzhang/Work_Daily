@@ -1,11 +1,12 @@
 import time
 from datetime import date, datetime
 
-import pymysql
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from db import MYSQL_DATABASE, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, get_connection
+import pymysql
+
+from app.db import MYSQL_DATABASE, MYSQL_HOST, MYSQL_PORT, MYSQL_USER, get_connection
 
 app = FastAPI()
 TASKS_TABLE = "todo_data"
