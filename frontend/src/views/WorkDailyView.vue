@@ -201,6 +201,13 @@ function dateHasCompleteOnly(dateIso) {
   return dayTasks.length > 0 && dayTasks.every((t) => t.status === "done");
 }
 
+function taskCountTitle(dateIso) {
+  const count = tasks.value.filter((t) => t.created_at?.startsWith(dateIso)).length;
+  if (!count) return "";
+  const open = tasks.value.filter((t) => t.created_at?.startsWith(dateIso) && t.status !== "done").length;
+  return `${count} 条任务 · ${open} 条未完成`;
+}
+
 /* ── Actions ── */
 function loadState() {
   try {
@@ -409,6 +416,7 @@ onMounted(async () => {
                 'is-complete': dateHasCompleteOnly(cell.date) && cell.date !== selectedDate
               }"
               type="button"
+              :title="taskCountTitle(cell.date)"
               @click="selectDate(cell.date)"
             >
               {{ cell.day }}
@@ -586,8 +594,8 @@ onMounted(async () => {
             <!-- Empty -->
             <section v-else class="empty-state">
               <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
-              <h4 class="empty-title">还没有任务</h4>
-              <p class="empty-hint">在输入框中记录今天要推进的工作吧</p>
+              <h4 class="empty-title">{{ isToday ? '还没有任务' : '这天没有记录任务' }}</h4>
+              <p class="empty-hint">{{ isToday ? '在输入框中记录今天要推进的工作吧' : '切换到其他日期，或回到今天开始记录' }}</p>
             </section>
           </div>
           </Transition>

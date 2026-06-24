@@ -220,6 +220,10 @@ function scrollToMembership(memberId) {
   });
 }
 
+function isExpiringSoon(item) {
+  return item.status === "expiring" && (item.days_remaining ?? 999) <= 7;
+}
+
 function openComposerMeta(field) { composerMetaField.value = field; }
 function closeComposerMeta(field) { if (composerMetaField.value === field) composerMetaField.value = null; }
 function submitComposerMeta(field) {
@@ -415,8 +419,9 @@ watch(() => composer.startDate, (val) => {
             v-for="item in filteredMemberships"
             :key="item.id"
             class="membership-item"
-            :class="{ 'is-editing': editingId === item.id, 'is-expired': item.status === 'expired', 'is-highlighted': highlightId === item.id }"
+            :class="{ 'is-editing': editingId === item.id, 'is-expired': item.status === 'expired', 'is-highlighted': highlightId === item.id, 'is-expiring-soon': isExpiringSoon(item) }"
             :data-member-id="item.id"
+            :title="`${item.name} · ${formatDate(item.start_date)} → ${formatDate(item.end_date)} · 剩余 ${item.days_remaining ?? '?'} 天`"
           >
             <!-- Row 1: Name + Price -->
             <div class="mi-head">

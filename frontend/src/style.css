@@ -893,7 +893,11 @@ body {
   color: transparent;
   cursor: pointer;
   flex-shrink: 0;
-  transition: border-color var(--dur-100) var(--ease-out), background var(--dur-100) var(--ease-out), color var(--dur-100) var(--ease-out);
+  transition: border-color var(--dur-100) var(--ease-out), background var(--dur-100) var(--ease-out), color var(--dur-100) var(--ease-out), transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.task-status-button:active {
+  transform: scale(1.15);
 }
 
 .task-status-button:hover {
@@ -1532,6 +1536,11 @@ body {
 
 .membership-item.is-highlighted {
   background: rgba(178, 34, 34, 0.06);
+  border-left-color: var(--color-vermillion);
+}
+
+.membership-item.is-expiring-soon {
+  background: rgba(178, 34, 34, 0.04);
   border-left-color: var(--color-vermillion);
 }
 
