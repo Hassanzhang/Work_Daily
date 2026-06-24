@@ -98,17 +98,39 @@ function serializeTask(t) {
 }
 
 /* ── Computed ── */
-const visibleTasks = computed(() =>
-  tasks.value.filter((t) => t.created_at?.startsWith(selectedDate.value))
-);
+const visibleTasks = computed(() => {
+  const date = selectedDate.value;
+  const isToday = date === todayIso();
+  return tasks.value.filter((t) => {
+    const datePart = t.created_at?.slice(0, 10);
+    if (isToday) {
+      // 今日视图：显示今天新建 + 所有历史未完成任务
+      if (t.status === "done") {
+        // 已完成的任务只显示今天完成的
+        return (t.completed_at || t.created_at)?.startsWith(date);
+      }
+      // 未完成的任务：今天及之前创建的都显示
+      return datePart <= date;
+    }
+    // 历史日期视图：只显示当天创建的
+    return datePart === date;
+  });
+});
 
 const filteredTasks = computed(() => {
   let list = [...visibleTasks.value];
+  const date = selectedDate.value;
   list.sort((a, b) => {
+    // 今日创建的任务排在最前
+    const aToday = (a.created_at || "").startsWith(date);
+    const bToday = (b.created_at || "").startsWith(date);
+    if (aToday !== bToday) return bToday ? 1 : -1;
+    // 其次按优先级
     const p = { high: 0, medium: 1, low: 2 };
     const pa = p[a.priority] ?? 99;
     const pb = p[b.priority] ?? 99;
     if (pa !== pb) return pa - pb;
+    // 再按状态（进行中 > 待开始 > 已完成）
     const s = { "in-progress": 0, todo: 1, done: 2 };
     return (s[a.status] ?? 99) - (s[b.status] ?? 99);
   });
@@ -466,7 +488,8 @@ onMounted(() => {
             </div>
           </div>
 
-          <div class="task-list">
+          <Transition name="date-switch" mode="out-in">
+            <div class="task-list" :key="selectedDate">
             <TransitionGroup name="task-list">
               <article
                 v-for="task in filteredTasks"
@@ -524,6 +547,7 @@ onMounted(() => {
               <h4 class="empty-title">暂无任务</h4>
             </section>
           </div>
+          </Transition>
         </section>
 
         <!-- Editor panel -->

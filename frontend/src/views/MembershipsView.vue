@@ -400,46 +400,49 @@ watch(() => composer.startDate, (val) => {
             class="membership-item"
             :class="{ 'is-editing': editingId === item.id, 'is-expired': item.status === 'expired' }"
           >
-            <div class="membership-item-main">
-              <div class="membership-item-header">
-                <div class="membership-item-title-group">
-                  <div class="membership-item-title">{{ item.name }}</div>
-                  <div class="membership-item-meta">
-                    <span class="status-badge" :data-status="item.status">{{ statusLabel(item.status) }}</span>
-                    <span class="meta-tag meta-date">{{ remainingLabel(item) }}</span>
-                  </div>
-                </div>
-                <div v-if="item.price" class="membership-item-price">{{ formatPrice(item.price) }}</div>
-                <div class="task-actions membership-actions">
-                  <button class="text-button" type="button" @click="editingId === item.id ? closeEditor() : openEditor(item)">
-                    {{ editingId === item.id ? "收起" : "编辑" }}
-                  </button>
-                  <template v-if="pendingDeleteId === item.id">
-                    <div class="confirm-actions">
-                      <button class="confirm-button" type="button" @click="pendingDeleteId = null">取消</button>
-                      <button class="confirm-button is-danger" type="button" @click="removeMembership(item.id)">确认删除</button>
-                    </div>
-                  </template>
-                  <button v-else class="text-button danger-button" type="button" @click="pendingDeleteId = item.id">删除</button>
-                </div>
+            <!-- Row 1: Name + Price -->
+            <div class="mi-head">
+              <h4 class="mi-name">{{ item.name }}</h4>
+              <span v-if="item.price" class="mi-price">{{ formatPrice(item.price) }}</span>
+            </div>
+
+            <!-- Row 2: Status + Days + Actions -->
+            <div class="mi-status-row">
+              <div class="mi-status-group">
+                <span class="status-badge" :data-status="item.status">{{ statusLabel(item.status) }}</span>
+                <span class="mi-remaining">{{ remainingLabel(item) }}</span>
               </div>
-              <div class="membership-item-timeline">
-                <div class="membership-item-dates">
-                  <span>{{ formatDate(item.start_date) }}</span>
-                  <span> → </span>
-                  <span>{{ formatDate(item.end_date) }}</span>
-                </div>
-                <div class="membership-progress-inline">
-                  <div class="membership-progress-track">
-                    <div
-                      class="membership-progress-fill"
-                      :data-status="item.status"
-                      :style="{ transform: `translateX(-${100 - Math.max(0, Math.min(100, item.progress_percent ?? 0))}%)` }"
-                    ></div>
+              <div class="mi-actions">
+                <button class="text-button" type="button" @click="editingId === item.id ? closeEditor() : openEditor(item)">
+                  {{ editingId === item.id ? "收起" : "编辑" }}
+                </button>
+                <template v-if="pendingDeleteId === item.id">
+                  <div class="confirm-actions">
+                    <button class="confirm-button" type="button" @click="pendingDeleteId = null">取消</button>
+                    <button class="confirm-button is-danger" type="button" @click="removeMembership(item.id)">确认删除</button>
                   </div>
-                  <span class="membership-progress-value">{{ progressValue(item) }}</span>
-                </div>
+                </template>
+                <button v-else class="text-button danger-button" type="button" @click="pendingDeleteId = item.id">删除</button>
               </div>
+            </div>
+
+            <!-- Row 3: Timeline -->
+            <div class="mi-timeline">
+              <span class="mi-timeline-label mi-timeline-label--start">{{ formatDate(item.start_date) }}</span>
+              <div class="mi-timeline-bar" aria-hidden="true"></div>
+              <span class="mi-timeline-label mi-timeline-label--end">{{ formatDate(item.end_date) }}</span>
+            </div>
+
+            <!-- Row 4: Progress -->
+            <div class="mi-progress">
+              <div class="mi-progress-track">
+                <div
+                  class="mi-progress-fill"
+                  :data-status="item.status"
+                  :style="{ transform: `translateX(-${100 - Math.max(0, Math.min(100, item.progress_percent ?? 0))}%)` }"
+                ></div>
+              </div>
+              <span class="mi-progress-value">{{ progressValue(item) }}</span>
             </div>
 
             <!-- Inline editor -->
