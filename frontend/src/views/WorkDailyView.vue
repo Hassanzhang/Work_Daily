@@ -182,6 +182,24 @@ const yesterdayStats = computed(() => {
 
 const isToday = computed(() => selectedDate.value === todayIso());
 
+const monthSummary = computed(() => {
+  const [y, m] = calendarMonth.value.split("-");
+  const prefix = `${y}-${m}`;
+  const monthTasks = tasks.value.filter((t) => t.created_at?.startsWith(prefix));
+  const done = monthTasks.filter((t) => t.status === "done");
+  const rate = monthTasks.length > 0 ? Math.round((done.length / monthTasks.length) * 100) : null;
+  let avgDays = null;
+  if (done.length > 0) {
+    const total = done.reduce((sum, t) => {
+      const c = new Date(t.created_at.slice(0, 10));
+      const d = new Date((t.completed_at || t.created_at).slice(0, 10));
+      return sum + Math.max(0, (d - c) / (1000 * 60 * 60 * 24));
+    }, 0);
+    avgDays = Math.round((total / done.length) * 10) / 10;
+  }
+  return { total: monthTasks.length, done: done.length, rate, avgDays };
+});
+
 const calendarDays = computed(() => {
   const [y, m] = calendarMonth.value.split("-").map(Number);
   const firstDay = new Date(y, m - 1, 1);
@@ -454,6 +472,15 @@ onMounted(async () => {
           </div>
         </div>
       </section>
+
+      <!-- Month summary -->
+      <div v-if="monthSummary.total > 0" class="month-summary">
+        <span>本月 {{ monthSummary.total }} 条任务</span>
+        <span class="month-summary-sep">·</span>
+        <span>{{ monthSummary.rate !== null ? '完成 ' + monthSummary.rate + '%' : '暂无完成' }}</span>
+        <span class="month-summary-sep">·</span>
+        <span>{{ monthSummary.avgDays !== null ? '平均 ' + monthSummary.avgDays + ' 天' : '—' }}</span>
+      </div>
 
     </aside>
     <!-- ── Workspace ── -->
