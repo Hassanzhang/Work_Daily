@@ -394,14 +394,14 @@ body {
 .day-button.has-open:not(.is-selected)::after {
   content: "";
   position: absolute;
-  bottom: 3px;
+  bottom: 2px;
   left: 50%;
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: var(--r-full);
   background: var(--color-vermillion);
   transform: translateX(-50%);
-  opacity: 0.7;
+  opacity: 0.72;
 }
 
 .day-button.is-complete:not(.is-selected) {
@@ -772,11 +772,13 @@ body {
 
 /* ── Task Item ── */
 .task-item {
-  padding: var(--s-3) var(--s-4);
+  padding: var(--s-4) var(--s-4);
   margin-bottom: var(--s-2);
   border-left: 3px solid transparent;
   border-radius: 0 var(--r-sm) var(--r-sm) 0;
   background: var(--color-kraft);
+  display: grid;
+  gap: var(--s-2);
   transition: border-color var(--dur-150) var(--ease-out), background var(--dur-150) var(--ease-out);
 }
 
@@ -793,7 +795,7 @@ body {
 }
 
 .task-item[data-status="in-progress"][data-priority="low"] {
-  border-left-color: var(--color-pencil);
+  border-left-color: #4A4A44;
 }
 
 .task-item.is-done {
@@ -806,11 +808,54 @@ body {
   background: rgba(178, 34, 34, 0.04);
 }
 
+/* Row 1: Status circle + Title + Actions */
 .task-main {
   display: grid;
   grid-template-columns: 28px minmax(0, 1fr) auto;
   gap: var(--s-3);
-  align-items: flex-start;
+  align-items: center;
+}
+
+.task-body {
+  min-width: 0;
+}
+
+.task-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 640;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+  color: var(--color-ink);
+  word-break: break-word;
+}
+
+.task-item.is-done .task-title {
+  text-decoration: line-through;
+  text-decoration-color: var(--color-pine);
+  color: var(--color-pencil);
+}
+
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  flex-shrink: 0;
+}
+
+/* Row 2: Meta tags */
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+  padding-left: 40px;
+}
+
+.task-meta-cluster {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
 }
 
 .task-status {
@@ -856,40 +901,6 @@ body {
   outline-offset: 2px;
 }
 
-.task-body {
-  display: grid;
-  gap: var(--s-1);
-  min-width: 0;
-}
-
-.task-title {
-  font-family: var(--font-ui);
-  font-size: 14px;
-  font-weight: 520;
-  line-height: 1.4;
-  color: var(--color-ink);
-  word-break: break-word;
-}
-
-.task-item.is-done .task-title {
-  text-decoration: line-through;
-  text-decoration-color: var(--color-pine);
-  color: var(--color-pencil);
-}
-
-.task-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-  flex-wrap: wrap;
-}
-
-.task-meta-cluster {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
-}
-
 .meta-tag {
   display: inline-flex;
   align-items: center;
@@ -919,7 +930,7 @@ body {
 
 .meta-priority[data-priority="low"] {
   background: var(--color-kraft-dark);
-  color: var(--color-pencil);
+  color: #4A4A44;
 }
 
 .meta-date {
@@ -1027,14 +1038,67 @@ body {
 .empty-state {
   padding: var(--s-12) var(--s-5);
   text-align: center;
+  display: grid;
+  gap: var(--s-3);
+  justify-items: center;
+}
+
+.empty-icon {
+  width: 40px;
+  height: 40px;
+  color: var(--color-edge);
+  margin-bottom: var(--s-1);
 }
 
 .empty-title {
   font-family: var(--font-ui);
   font-size: 14px;
-  font-weight: 480;
+  font-weight: 520;
   color: var(--color-pencil);
-  font-style: italic;
+}
+
+.empty-hint {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--color-edge);
+}
+
+/* ── Skeleton Loading ── */
+@keyframes shimmer {
+  0%   { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+
+.skeleton-list {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.skeleton-row {
+  height: 52px;
+  border-radius: var(--r-sm);
+  background: var(--color-kraft);
+  background-image: linear-gradient(
+    90deg,
+    var(--color-kraft) 0px,
+    var(--color-paper) 40px,
+    var(--color-kraft) 80px
+  );
+  background-size: 200px 100%;
+  background-repeat: no-repeat;
+  animation: shimmer 1.5s var(--ease-out) infinite;
+}
+
+/* ── Stats Trend ── */
+.stat-trend {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 560;
+  letter-spacing: 0.02em;
+}
+
+.stat-trend[data-trend="up"] {
+  color: var(--color-vermillion);
 }
 
 /* ── Workspace Body (for editor panel) ── */
@@ -1263,6 +1327,12 @@ body {
   border-radius: 0 var(--r-xs) var(--r-xs) 0;
   display: grid;
   gap: 2px;
+  cursor: pointer;
+  transition: background var(--dur-100) var(--ease-out);
+}
+
+.membership-alert-item:hover {
+  background: rgba(178, 34, 34, 0.10);
 }
 
 .membership-alert-item[data-status="expiring"] {
@@ -1439,6 +1509,11 @@ body {
 
 .membership-item.is-expired {
   opacity: 0.5;
+}
+
+.membership-item.is-highlighted {
+  background: rgba(178, 34, 34, 0.06);
+  border-left-color: var(--color-vermillion);
 }
 
 /* Row 1: Name + Price */

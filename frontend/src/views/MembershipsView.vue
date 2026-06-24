@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import DatePickerLume from "../components/DatePickerLume.vue";
 
 /* ── Config ── */
@@ -20,6 +20,8 @@ const editingId = ref(null);
 const pendingDeleteId = ref(null);
 const syncPending = ref(false);
 const composerMetaField = ref(null);
+const highlightId = ref(null);
+const listRef = ref(null);
 
 const composer = reactive({
   name: "",
@@ -208,6 +210,16 @@ async function removeMembership(memberId) {
   await syncMemberships();
 }
 
+function scrollToMembership(memberId) {
+  currentFilter.value = "all";
+  highlightId.value = memberId;
+  nextTick(() => {
+    const el = listRef.value?.querySelector(`[data-member-id="${memberId}"]`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(() => { highlightId.value = null; }, 2000);
+  });
+}
+
 function openComposerMeta(field) { composerMetaField.value = field; }
 function closeComposerMeta(field) { if (composerMetaField.value === field) composerMetaField.value = null; }
 function submitComposerMeta(field) {
@@ -271,6 +283,10 @@ watch(() => composer.startDate, (val) => {
             :key="item.id"
             class="membership-alert-item"
             :data-status="item.status"
+            role="button"
+            tabindex="0"
+            @click="scrollToMembership(item.id)"
+            @keydown.enter="scrollToMembership(item.id)"
           >
             <div class="membership-alert-name">{{ item.name }}</div>
             <div class="membership-alert-meta">{{ remainingLabel(item) }}</div>
@@ -393,12 +409,13 @@ watch(() => composer.startDate, (val) => {
           </div>
         </div>
 
-        <div class="membership-list">
+        <div ref="listRef" class="membership-list">
           <article
             v-for="item in filteredMemberships"
             :key="item.id"
             class="membership-item"
-            :class="{ 'is-editing': editingId === item.id, 'is-expired': item.status === 'expired' }"
+            :class="{ 'is-editing': editingId === item.id, 'is-expired': item.status === 'expired', 'is-highlighted': highlightId === item.id }"
+            :data-member-id="item.id"
           >
             <!-- Row 1: Name + Price -->
             <div class="mi-head">
@@ -473,7 +490,9 @@ watch(() => composer.startDate, (val) => {
           </article>
 
           <section v-if="!filteredMemberships.length" class="empty-state membership-empty">
-            <h4 class="empty-title">暂无会员记录</h4>
+            <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15l3 3 7-7"/></svg>
+            <h4 class="empty-title">还没有会员记录</h4>
+            <p class="empty-hint">在上方新增你的第一个订阅会员</p>
           </section>
         </div>
       </section>

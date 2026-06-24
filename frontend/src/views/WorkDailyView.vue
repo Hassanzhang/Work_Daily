@@ -35,6 +35,7 @@ const composerPriority = ref("medium");
 const composerTitle = ref("");
 const editingTaskId = ref(null);
 const pendingDeleteTaskId = ref(null);
+const loading = ref(true);
 const editorDraft = reactive({ title: "", priority: "medium" });
 
 let saveTimer = null;
@@ -152,6 +153,16 @@ const stats = computed(() => {
   };
 });
 
+const yesterdayStats = computed(() => {
+  try {
+    const raw = localStorage.getItem("work-daily-stats-snapshot");
+    if (!raw) return null;
+    const snap = JSON.parse(raw);
+    if (snap.date !== todayIso()) return snap;
+    return null;
+  } catch { return null; }
+});
+
 const isToday = computed(() => selectedDate.value === todayIso());
 
 const calendarDays = computed(() => {
@@ -211,7 +222,18 @@ function persistState() {
     collapseCompleted: collapseCompleted.value,
     composerPriority: composerPriority.value
   }));
+  saveStatsSnapshot();
   queueSync();
+}
+
+function saveStatsSnapshot() {
+  if (!isToday.value) return;
+  localStorage.setItem("work-daily-stats-snapshot", JSON.stringify({
+    date: todayIso(),
+    inProgress: stats.value.inProgress,
+    done: stats.value.done,
+    created: stats.value.created
+  }));
 }
 
 function queueSync(immediate = false) {
@@ -341,9 +363,11 @@ function statusGlyph(status) {
 }
 
 /* ── Init ── */
-onMounted(() => {
+onMounted(async () => {
   loadState();
-  hydrateTasks();
+  loading.value = true;
+  await hydrateTasks();
+  loading.value = false;
 });
 </script>
 
@@ -398,14 +422,23 @@ onMounted(() => {
         <article class="stat-block" :data-active="stats.inProgress > 0" data-kind="in-progress">
           <p class="stat-label">进行中</p>
           <p class="stat-value">{{ stats.inProgress }}</p>
+          <p v-if="isToday && yesterdayStats" class="stat-trend" :data-trend="stats.inProgress > yesterdayStats.inProgress ? 'up' : undefined">
+            {{ stats.inProgress > yesterdayStats.inProgress ? '↑' : '→' }}{{ Math.abs(stats.inProgress - yesterdayStats.inProgress) }}
+          </p>
         </article>
         <article class="stat-block" :data-active="stats.done > 0" data-kind="done">
           <p class="stat-label">已完成</p>
           <p class="stat-value">{{ stats.done }}</p>
+          <p v-if="isToday && yesterdayStats" class="stat-trend" :data-trend="stats.done > yesterdayStats.done ? 'up' : undefined">
+            {{ stats.done > yesterdayStats.done ? '↑' : '→' }}{{ Math.abs(stats.done - yesterdayStats.done) }}
+          </p>
         </article>
         <article class="stat-block" :data-active="stats.created > 0" data-kind="created">
           <p class="stat-label">{{ isToday ? "今日新增" : "当日新增" }}</p>
           <p class="stat-value">{{ stats.created }}</p>
+          <p v-if="isToday && yesterdayStats" class="stat-trend" :data-trend="stats.created > yesterdayStats.created ? 'up' : undefined">
+            {{ stats.created > yesterdayStats.created ? '↑' : '→' }}{{ Math.abs(stats.created - yesterdayStats.created) }}
+          </p>
         </article>
       </section>
     </aside>
@@ -490,6 +523,13 @@ onMounted(() => {
 
           <Transition name="date-switch" mode="out-in">
             <div class="task-list" :key="selectedDate">
+            <!-- Loading skeleton -->
+            <div v-if="loading" class="skeleton-list">
+              <div v-for="n in 3" :key="n" class="skeleton-row"></div>
+            </div>
+
+            <!-- Tasks -->
+            <template v-else-if="filteredTasks.length">
             <TransitionGroup name="task-list">
               <article
                 v-for="task in filteredTasks"
@@ -501,8 +541,7 @@ onMounted(() => {
                 }"
                 :data-status="task.status"
                 :data-priority="task.priority"
-              >
-                <div class="task-main">
+              ><div class="task-main">
                   <div class="task-status">
                     <button
                       class="task-status-button"
@@ -515,17 +554,6 @@ onMounted(() => {
                   </div>
                   <div class="task-body">
                     <h4 class="task-title">{{ task.title }}</h4>
-                    <div class="task-meta">
-                      <div class="task-meta-cluster">
-                        <span v-if="task.status !== 'done'" class="status-badge" :data-status="task.status">
-                          {{ statusLabel(task.status) }}
-                        </span>
-                        <span class="meta-tag meta-priority" :data-priority="task.priority">
-                          {{ priorityLabel(task.priority) }}
-                        </span>
-                      </div>
-                      <span class="meta-tag meta-date">{{ task.created_at?.slice(0, 10) }}</span>
-                    </div>
                   </div>
                   <div class="task-actions">
                     <button class="text-button" type="button" @click="editingTaskId === task.id ? closeEditor() : openEditor(task.id)">
@@ -540,11 +568,26 @@ onMounted(() => {
                     <button v-else class="text-button danger-button" type="button" @click="pendingDeleteTaskId = task.id">删除</button>
                   </div>
                 </div>
+                <div class="task-meta">
+                  <div class="task-meta-cluster">
+                    <span v-if="task.status !== 'done'" class="status-badge" :data-status="task.status">
+                      {{ statusLabel(task.status) }}
+                    </span>
+                    <span class="meta-tag meta-priority" :data-priority="task.priority">
+                      {{ priorityLabel(task.priority) }}
+                    </span>
+                  </div>
+                  <span class="meta-tag meta-date">{{ task.created_at?.slice(0, 10) }}</span>
+                </div>
               </article>
             </TransitionGroup>
+            </template>
 
-            <section v-if="!filteredTasks.length" class="empty-state">
-              <h4 class="empty-title">暂无任务</h4>
+            <!-- Empty -->
+            <section v-else class="empty-state">
+              <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
+              <h4 class="empty-title">还没有任务</h4>
+              <p class="empty-hint">在输入框中记录今天要推进的工作吧</p>
             </section>
           </div>
           </Transition>
