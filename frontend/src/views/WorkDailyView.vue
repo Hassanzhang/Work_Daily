@@ -477,11 +477,20 @@ onMounted(async () => {
 
       <!-- Month summary -->
       <div v-if="monthSummary.total > 0" class="month-summary">
-        <span>本月 {{ monthSummary.total }} 条任务</span>
-        <span class="month-summary-sep">·</span>
-        <span>{{ monthSummary.rate !== null ? '完成 ' + monthSummary.rate + '%' : '暂无完成' }}</span>
-        <span class="month-summary-sep">·</span>
-        <span>{{ monthSummary.avgDays !== null ? '平均 ' + monthSummary.avgDays + ' 天' : '—' }}</span>
+        <div class="ms-col">
+          <span class="ms-num">{{ monthSummary.total }}</span>
+          <span class="ms-label">总任务</span>
+        </div>
+        <div class="ms-div"></div>
+        <div class="ms-col">
+          <span class="ms-num">{{ monthSummary.rate !== null ? monthSummary.rate + '%' : '--' }}</span>
+          <span class="ms-label">完成率</span>
+        </div>
+        <div class="ms-div"></div>
+        <div class="ms-col">
+          <span class="ms-num">{{ monthSummary.avgDays !== null ? monthSummary.avgDays : '--' }}</span>
+          <span class="ms-label">平均 天</span>
+        </div>
       </div>
 
     </aside>
