@@ -561,7 +561,7 @@ onMounted(async () => {
 
             <!-- Tasks -->
             <template v-else-if="filteredTasks.length">
-            <TransitionGroup name="task-list">
+            <TransitionGroup name="task-list" tag="div" class="task-list-group">
               <article
                 v-for="task in filteredTasks"
                 :key="task.id"

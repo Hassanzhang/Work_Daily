@@ -84,27 +84,6 @@ body {
 
 #app { height: 100%; }
 
-/* ── Skip Link ── */
-.skip-link {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  z-index: 1000;
-  padding: 8px 16px;
-  background: var(--color-vermillion);
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: var(--r-sm);
-  text-decoration: none;
-  transform: translateY(-120%);
-  transition: transform var(--dur-150) var(--ease-out);
-}
-
-.skip-link:focus {
-  transform: translateY(0);
-}
-
 /* ── Page Shell ── */
 .page-viewport {
   position: fixed;
@@ -117,18 +96,19 @@ body {
 
 .page-canvas {
   width: min(1440px, 100%);
-  height: calc(100vh - var(--s-12));
+  height: calc(100vh - 56px);
   display: flex;
   flex-direction: column;
-  gap: var(--s-4);
+  gap: var(--s-5);
 }
 
 /* ── Top Nav ── */
 .top-nav-shell {
   display: flex;
+  justify-content: center;
   align-items: center;
-  padding: 0 var(--s-1);
   flex-shrink: 0;
+  padding-top: var(--s-1);
 }
 
 .app-tabs { display: inline-flex; }
@@ -1818,18 +1798,27 @@ body {
   transition: opacity var(--dur-200) var(--ease-out), transform var(--dur-200) var(--ease-out);
 }
 
+.task-list-leave-active {
+  position: absolute;
+  width: 100%;
+}
+
 .task-list-enter-from {
   opacity: 0;
-  transform: translateY(6px);
+  transform: translateY(8px);
 }
 
 .task-list-leave-to {
   opacity: 0;
-  transform: translateY(-4px);
+  transform: translateY(-6px);
 }
 
 .task-list-move {
-  transition: transform var(--dur-200) var(--ease-out);
+  transition: transform var(--dur-300) var(--ease-out);
+}
+
+.task-list-group {
+  position: relative;
 }
 
 /* Date switch — page-turn effect when switching days */
