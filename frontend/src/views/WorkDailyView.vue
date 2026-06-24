@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 
 /* ── Config ── */
 const STORAGE_KEY = "work-daily-data-v2";

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
+import { computed, nextTick, onMounted, reactive, ref, watch } from "vue";
 import DatePickerLume from "../components/DatePickerLume.vue";
 
 /* ── Config ── */
@@ -48,7 +48,7 @@ onMounted(() => {
 /* ── Computed ── */
 const filteredMemberships = computed(() => {
   const source = [...memberships.value].sort((a, b) =>
-    (a.end_date || "").localeCompare(b.end_date || "") || a.name.localeCompare(b.name)
+    (a.end_date || "").localeCompare(b.end_date || "") || (a.name || "").localeCompare(b.name || "")
   );
   if (currentFilter.value === "all") return source;
   return source.filter((item) => item.status === currentFilter.value);
@@ -287,6 +287,7 @@ watch(() => composer.startDate, (val) => {
             tabindex="0"
             @click="scrollToMembership(item.id)"
             @keydown.enter="scrollToMembership(item.id)"
+            @keydown.space.prevent="scrollToMembership(item.id)"
           >
             <div class="membership-alert-name">{{ item.name }}</div>
             <div class="membership-alert-meta">{{ remainingLabel(item) }}</div>

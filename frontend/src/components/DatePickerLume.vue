@@ -222,7 +222,9 @@ function isSameDate(a, b) {
                   'dp-day-btn--today': cell.isToday,
                   'dp-day-btn--selected': cell.isSelected
                 }"
-                @click="cell.inMonth && selectDate(cell.date)"
+                :disabled="!cell.inMonth"
+                :aria-label="cell.date"
+                @click="selectDate(cell.date)"
               >{{ cell.label }}</button>
             </div>
           </div>
@@ -469,6 +471,7 @@ function isSameDate(a, b) {
   font-variant-numeric: tabular-nums;
   color: var(--color-ink);
   cursor: pointer;
+  position: relative;
   transition: border-color var(--dur-100) var(--ease-out), background var(--dur-100) var(--ease-out), color var(--dur-100) var(--ease-out);
 }
 
@@ -478,6 +481,15 @@ function isSameDate(a, b) {
   color: var(--color-edge);
   cursor: default;
   pointer-events: none;
+}
+
+.dp-day-btn--muted:disabled {
+  opacity: 0.4;
+}
+
+.dp-day-btn:focus-visible {
+  outline: 2px solid var(--color-vermillion);
+  outline-offset: 2px;
 }
 
 .dp-day-btn--today {

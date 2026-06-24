@@ -361,7 +361,12 @@ body {
 }
 
 .day-button:hover {
-  background: rgba(178, 34, 34, 0.05);
+  background: var(--color-kraft);
+}
+
+.day-button:focus-visible {
+  outline: 2px solid var(--color-vermillion);
+  outline-offset: 2px;
 }
 
 .day-button.is-outside {
@@ -372,16 +377,10 @@ body {
   font-weight: 620;
 }
 
-.day-button.is-today:not(.is-selected)::after {
-  content: "";
-  position: absolute;
-  bottom: 2px;
-  left: 50%;
-  width: 3px;
-  height: 3px;
-  border-radius: var(--r-full);
-  background: var(--color-ink);
-  transform: translateX(-50%);
+.day-button.is-today:not(.is-selected) {
+  background: var(--color-vermillion);
+  color: #ffffff;
+  font-weight: 680;
 }
 
 /* Signature: vermilion circle for selected day */
@@ -416,14 +415,15 @@ body {
 }
 
 .stat-block {
-  padding: var(--s-3) var(--s-2);
+  padding: 14px 8px 10px;
+  text-align: center;
   background: var(--color-kraft);
   border: 1px solid var(--color-edge);
   border-radius: var(--r-sm);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
 }
 
 .stat-block[data-active="true"] {
@@ -433,17 +433,18 @@ body {
 .stat-label {
   font-family: var(--font-ui);
   font-size: 10px;
-  font-weight: 520;
+  font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--color-pencil);
   text-align: center;
+  margin-bottom: 0;
 }
 
 .stat-value {
   font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 680;
+  font-size: 30px;
+  font-weight: 760;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   color: var(--color-ink);
@@ -584,6 +585,11 @@ body {
   color: var(--color-ink);
 }
 
+.priority-chip:focus-visible {
+  outline: 2px solid var(--color-vermillion);
+  outline-offset: 2px;
+}
+
 .priority-chip.is-active {
   border-color: var(--color-vermillion);
   background: rgba(178, 34, 34, 0.06);
@@ -665,6 +671,11 @@ body {
   color: var(--color-ink);
 }
 
+.soft-button:focus-visible {
+  outline: 2px solid var(--color-vermillion);
+  outline-offset: 2px;
+}
+
 .soft-button.is-active {
   border-color: var(--color-vermillion);
   color: var(--color-vermillion);
@@ -698,6 +709,11 @@ body {
 
 .filter-chip:hover {
   color: var(--color-ink);
+}
+
+.filter-chip:focus-visible {
+  outline: 2px solid var(--color-vermillion);
+  outline-offset: 2px;
 }
 
 .filter-chip.is-active {
@@ -966,13 +982,6 @@ body {
   color: var(--color-pine);
 }
 
-.task-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--s-1);
-  flex-shrink: 0;
-}
-
 .text-button {
   height: 28px;
   padding: 0 var(--s-3);
@@ -990,6 +999,11 @@ body {
 .text-button:hover {
   background: var(--color-kraft-dark);
   color: var(--color-ink);
+}
+
+.text-button:focus-visible {
+  outline: 2px solid var(--color-vermillion);
+  outline-offset: 2px;
 }
 
 .danger-button {
@@ -1022,6 +1036,11 @@ body {
 
 .confirm-button:hover {
   border-color: var(--color-pencil);
+}
+
+.confirm-button:focus-visible {
+  outline: 2px solid var(--color-vermillion);
+  outline-offset: 2px;
 }
 
 .confirm-button.is-danger {
@@ -1098,7 +1117,7 @@ body {
 }
 
 .stat-trend[data-trend="up"] {
-  color: var(--color-vermillion);
+  color: var(--color-pine);
 }
 
 /* ── Workspace Body (for editor panel) ── */
