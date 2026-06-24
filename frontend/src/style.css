@@ -50,7 +50,7 @@
   --dur-300: 300ms;
 
   /* Layout */
-  --sidebar-w: 316px;
+  --sidebar-w: 280px;
 }
 
 /* ── Reduced Motion ── */
@@ -189,7 +189,7 @@ body {
 
 /* ── Brand Block ── */
 .brand-block {
-  padding: var(--s-5) var(--s-5);
+  padding: var(--s-4);
 }
 
 .eyebrow {
@@ -221,7 +221,7 @@ body {
 
 /* ── Calendar Shell ── */
 .calendar-shell {
-  padding: var(--s-5);
+  padding: var(--s-4);
   background-image: radial-gradient(circle, var(--color-pencil) 0.6px, transparent 0.6px);
   background-size: 14px 14px;
   background-color: var(--color-kraft);
@@ -229,7 +229,7 @@ body {
   border-radius: var(--r-md);
   display: flex;
   flex-direction: column;
-  gap: var(--s-4);
+  gap: var(--s-3);
 }
 
 .calendar-header {
@@ -273,9 +273,9 @@ body {
 
 .month-title {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 720;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.04em;
   line-height: 1;
   color: var(--color-ink);
 }
@@ -346,8 +346,8 @@ body {
 
 .day-button {
   position: relative;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -355,7 +355,7 @@ body {
   border-radius: var(--r-full);
   background: transparent;
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 460;
   font-variant-numeric: tabular-nums;
   color: var(--color-ink);
@@ -410,7 +410,52 @@ body {
   color: var(--color-pine);
 }
 
-/* ── Stats Panel ── */
+/* ── Stats Banner ── */
+.stat-banner {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--color-edge);
+  border-bottom: 1px solid var(--color-edge);
+}
+
+.stat-banner-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-banner-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-pencil);
+}
+
+.stat-banner-value {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 680;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+}
+
+.stat-banner-value--warn {
+  color: var(--color-vermillion);
+}
+
+.stat-banner-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--color-edge);
+  flex-shrink: 0;
+}
+
+/* ── Stats Panel (sidebar, kept for MembershipsView) ── */
 .stats-panel {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1851,7 +1896,7 @@ body {
 
 /* ── Responsive ── */
 @media (max-width: 1100px) {
-  :root { --sidebar-w: 280px; }
+  :root { --sidebar-w: 260px; }
   .workspace { padding: var(--s-6) var(--s-6); }
   .hero-title { font-size: 26px; }
 }

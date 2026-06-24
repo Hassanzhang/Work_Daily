@@ -147,12 +147,28 @@ const filteredTasks = computed(() => {
 });
 
 const stats = computed(() => {
-  const v = visibleTasks.value;
-  return {
-    inProgress: v.filter((t) => t.status === "in-progress").length,
-    done: v.filter((t) => t.status === "done").length,
-    created: v.filter((t) => t.created_at?.startsWith(selectedDate.value)).length
-  };
+  const todayTasks = tasks.value.filter((t) => t.created_at?.startsWith(selectedDate.value));
+  const doneToday = todayTasks.filter((t) => t.status === "done").length;
+  const totalToday = todayTasks.length;
+  const rate = totalToday > 0 ? Math.round((doneToday / totalToday) * 100) : null;
+
+  const overdue = tasks.value.filter((t) => {
+    const d = t.created_at?.slice(0, 10);
+    return d && d < selectedDate.value && t.status !== "done";
+  }).length;
+
+  const completedTasks = tasks.value.filter((t) => t.status === "done" && t.created_at && t.completed_at);
+  let avgDays = null;
+  if (completedTasks.length > 0) {
+    const total = completedTasks.reduce((sum, t) => {
+      const created = new Date(t.created_at.slice(0, 10));
+      const done = new Date((t.completed_at || t.created_at).slice(0, 10));
+      return sum + Math.max(0, (done - created) / (1000 * 60 * 60 * 24));
+    }, 0);
+    avgDays = Math.round((total / completedTasks.length) * 10) / 10;
+  }
+
+  return { rate, overdue, avgDays, doneToday, totalToday };
 });
 
 const yesterdayStats = computed(() => {
@@ -160,8 +176,7 @@ const yesterdayStats = computed(() => {
     const raw = localStorage.getItem("work-daily-stats-snapshot");
     if (!raw) return null;
     const snap = JSON.parse(raw);
-    if (snap.date !== todayIso()) return snap;
-    return null;
+    return snap.date !== todayIso() ? snap : null;
   } catch { return null; }
 });
 
@@ -239,9 +254,9 @@ function saveStatsSnapshot() {
   if (!isToday.value) return;
   localStorage.setItem("work-daily-stats-snapshot", JSON.stringify({
     date: todayIso(),
-    inProgress: stats.value.inProgress,
-    done: stats.value.done,
-    created: stats.value.created
+    rate: stats.value.rate,
+    overdue: stats.value.overdue,
+    avgDays: stats.value.avgDays
   }));
 }
 
@@ -440,32 +455,7 @@ onMounted(async () => {
         </div>
       </section>
 
-      <!-- Stats -->
-      <section class="stats-panel">
-        <article class="stat-block" :data-active="stats.inProgress > 0" data-kind="in-progress">
-          <p class="stat-label">进行中</p>
-          <p class="stat-value">{{ stats.inProgress }}</p>
-          <p v-if="isToday && yesterdayStats" class="stat-trend" :data-trend="stats.inProgress > yesterdayStats.inProgress ? 'up-bad' : undefined">
-            {{ stats.inProgress > yesterdayStats.inProgress ? '↑' : '→' }}{{ Math.abs(stats.inProgress - yesterdayStats.inProgress) }} 较昨日
-          </p>
-        </article>
-        <article class="stat-block" :data-active="stats.done > 0" data-kind="done">
-          <p class="stat-label">已完成</p>
-          <p class="stat-value">{{ stats.done }}</p>
-          <p v-if="isToday && yesterdayStats" class="stat-trend" :data-trend="stats.done > yesterdayStats.done ? 'up' : undefined">
-            {{ stats.done > yesterdayStats.done ? '↑' : '→' }}{{ Math.abs(stats.done - yesterdayStats.done) }}
-          </p>
-        </article>
-        <article class="stat-block" :data-active="stats.created > 0" data-kind="created">
-          <p class="stat-label">{{ isToday ? "今日新增" : "当日新增" }}</p>
-          <p class="stat-value">{{ stats.created }}</p>
-          <p v-if="isToday && yesterdayStats" class="stat-trend" :data-trend="stats.created > yesterdayStats.created ? 'up' : undefined">
-            {{ stats.created > yesterdayStats.created ? '↑' : '→' }}{{ Math.abs(stats.created - yesterdayStats.created) }}
-          </p>
-        </article>
-      </section>
     </aside>
-
     <!-- ── Workspace ── -->
     <main class="workspace entrance-2">
       <header class="page-head">
@@ -482,6 +472,24 @@ onMounted(async () => {
               </template>
               <template v-else>查看当日任务记录</template>
             </p>
+          </div>
+        </div>
+
+        <!-- Stats banner -->
+        <div class="stat-banner">
+          <div class="stat-banner-item">
+            <span class="stat-banner-label">今日完成率</span>
+            <span class="stat-banner-value">{{ stats.rate !== null ? stats.rate + '%' : '--' }}</span>
+          </div>
+          <div class="stat-banner-divider"></div>
+          <div class="stat-banner-item">
+            <span class="stat-banner-label">延迟任务</span>
+            <span class="stat-banner-value" :class="{ 'stat-banner-value--warn': stats.overdue > 0 }">{{ stats.overdue }}</span>
+          </div>
+          <div class="stat-banner-divider"></div>
+          <div class="stat-banner-item">
+            <span class="stat-banner-label">平均完成</span>
+            <span class="stat-banner-value">{{ stats.avgDays !== null ? stats.avgDays + ' 天' : '--' }}</span>
           </div>
         </div>
 
