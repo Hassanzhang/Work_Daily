@@ -20,12 +20,13 @@ const activeView = computed(() =>
 </script>
 
 <template>
+  <a href="#main-content" class="skip-link">跳到主内容</a>
   <div class="page-viewport">
     <div class="page-canvas">
       <header class="top-nav-shell">
         <AppTabs v-model="currentPage" :options="pages" />
       </header>
-      <main class="app-stage">
+      <main id="main-content" class="app-stage">
         <component :is="activeView" />
       </main>
     </div>

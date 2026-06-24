@@ -84,6 +84,27 @@ body {
 
 #app { height: 100%; }
 
+/* ── Skip Link ── */
+.skip-link {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+  padding: 8px 16px;
+  background: var(--color-vermillion);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  transform: translateY(-120%);
+  transition: transform var(--dur-150) var(--ease-out);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 /* ── Page Shell ── */
 .page-viewport {
   position: fixed;
@@ -221,7 +242,9 @@ body {
 /* ── Calendar Shell ── */
 .calendar-shell {
   padding: var(--s-5);
-  background: var(--color-kraft);
+  background-image: radial-gradient(circle, var(--color-pencil) 0.6px, transparent 0.6px);
+  background-size: 14px 14px;
+  background-color: var(--color-kraft);
   border: 1px solid var(--color-edge);
   border-radius: var(--r-md);
   display: flex;
@@ -270,9 +293,9 @@ body {
 
 .month-title {
   font-family: var(--font-display);
-  font-size: 25px;
-  font-weight: 680;
-  letter-spacing: -0.04em;
+  font-size: 28px;
+  font-weight: 720;
+  letter-spacing: -0.05em;
   line-height: 1;
   color: var(--color-ink);
 }
@@ -283,8 +306,8 @@ body {
 }
 
 .icon-button {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -292,7 +315,7 @@ body {
   border-radius: var(--r-sm);
   background: transparent;
   color: var(--color-pencil);
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1;
   cursor: pointer;
   transition: background var(--dur-100) var(--ease-out), border-color var(--dur-100) var(--ease-out), color var(--dur-100) var(--ease-out);
@@ -494,9 +517,9 @@ body {
 .hero-title {
   font-family: var(--font-display);
   font-size: 30px;
-  font-weight: 680;
-  letter-spacing: -0.04em;
-  line-height: 1.08;
+  font-weight: 720;
+  letter-spacing: -0.05em;
+  line-height: 1.06;
   color: var(--color-ink);
 }
 
@@ -523,6 +546,15 @@ body {
   grid-template-columns: minmax(0, 1fr) auto auto;
   gap: var(--s-3);
   align-items: center;
+}
+
+.composer-label {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-pencil);
 }
 
 .composer-title input {
@@ -653,7 +685,7 @@ body {
 
 /* ── Soft Button ── */
 .soft-button {
-  height: 32px;
+  height: 34px;
   padding: 0 var(--s-4);
   border: 1px solid var(--color-edge);
   border-radius: var(--r-sm);
@@ -827,7 +859,7 @@ body {
 /* Row 1: Status circle + Title + Actions */
 .task-main {
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
   gap: var(--s-3);
   align-items: center;
 }
@@ -881,15 +913,15 @@ body {
 }
 
 .task-status-button {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid var(--color-edge);
+  border: 1.75px solid var(--color-edge);
   border-radius: var(--r-full);
   background: transparent;
-  font-size: 12px;
+  font-size: 13px;
   color: transparent;
   cursor: pointer;
   flex-shrink: 0;
@@ -1122,6 +1154,42 @@ body {
 
 .stat-trend[data-trend="up"] {
   color: var(--color-pine);
+}
+
+.stat-trend[data-trend="up-bad"] {
+  color: #C8960C;
+}
+
+/* ── Undo Toast ── */
+.undo-toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  margin-bottom: var(--s-3);
+  background: var(--color-ink);
+  color: #ffffff;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 520;
+}
+
+.undo-toast button {
+  background: rgba(255,255,255,0.18);
+  border: none;
+  border-radius: var(--r-xs);
+  color: #ffffff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: var(--s-1) var(--s-3);
+  cursor: pointer;
+  transition: background var(--dur-100) var(--ease-out);
+}
+
+.undo-toast button:hover {
+  background: rgba(255,255,255,0.30);
 }
 
 /* ── Workspace Body (for editor panel) ── */
@@ -1629,7 +1697,7 @@ body {
 
 .mi-progress-track {
   flex: 1;
-  height: 8px;
+  height: 10px;
   border-radius: var(--r-full);
   background: var(--color-kraft-dark);
   overflow: hidden;
@@ -1654,9 +1722,9 @@ body {
 
 .mi-progress-value {
   font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-pencil);
+  font-size: 14px;
+  font-weight: 640;
+  color: var(--color-ink);
   white-space: nowrap;
   min-width: 3.5ch;
   text-align: right;
@@ -1728,6 +1796,20 @@ body {
 
 .membership-empty {
   padding: var(--s-12) var(--s-5);
+}
+
+/* ── Orchestrated entrance ── */
+@keyframes entranceIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.entrance-1 { animation: entranceIn 300ms var(--ease-out) both; }
+.entrance-2 { animation: entranceIn 300ms var(--ease-out) 80ms both; }
+.entrance-3 { animation: entranceIn 300ms var(--ease-out) 160ms both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .entrance-1, .entrance-2, .entrance-3 { animation: none; opacity: 1; }
 }
 
 /* ── Transitions ── */

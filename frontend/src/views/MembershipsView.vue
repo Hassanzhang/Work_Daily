@@ -246,7 +246,7 @@ watch(() => composer.startDate, (val) => {
 <template>
   <div class="app-shell">
     <!-- ── Sidebar ── -->
-    <aside class="sidebar">
+    <aside class="sidebar entrance-1">
       <section class="brand-block">
         <p class="eyebrow">MEMBERSHIPS</p>
         <h1 class="brand-title">会员管理</h1>
@@ -318,7 +318,7 @@ watch(() => composer.startDate, (val) => {
     </aside>
 
     <!-- ── Workspace ── -->
-    <main class="workspace">
+    <main class="workspace entrance-2">
       <header class="page-head">
         <div class="title-row">
           <div class="title-stack">

@@ -36,6 +36,8 @@ const composerTitle = ref("");
 const editingTaskId = ref(null);
 const pendingDeleteTaskId = ref(null);
 const loading = ref(true);
+const undoTask = ref(null);
+let undoTimer = null;
 const editorDraft = reactive({ title: "", priority: "medium" });
 
 let saveTimer = null;
@@ -351,9 +353,22 @@ function saveEditor() {
 }
 
 function confirmDelete(taskId) {
+  const task = tasks.value.find((t) => t.id === taskId);
+  if (!task) return;
   tasks.value = tasks.value.filter((t) => t.id !== taskId);
   if (editingTaskId.value === taskId) closeEditor();
   pendingDeleteTaskId.value = null;
+  undoTask.value = task;
+  if (undoTimer) clearTimeout(undoTimer);
+  undoTimer = setTimeout(() => { undoTask.value = null; }, 4000);
+  persistState();
+}
+
+function undoDelete() {
+  if (!undoTask.value) return;
+  tasks.value.push(undoTask.value);
+  undoTask.value = null;
+  if (undoTimer) clearTimeout(undoTimer);
   persistState();
 }
 
@@ -381,7 +396,7 @@ onMounted(async () => {
 <template>
   <div class="app-shell">
     <!-- ── Sidebar ── -->
-    <aside class="sidebar">
+    <aside class="sidebar entrance-1">
       <section class="brand-block">
         <p class="eyebrow">TASK JOURNAL</p>
         <h1 class="brand-title">工作记录</h1>
@@ -430,8 +445,8 @@ onMounted(async () => {
         <article class="stat-block" :data-active="stats.inProgress > 0" data-kind="in-progress">
           <p class="stat-label">进行中</p>
           <p class="stat-value">{{ stats.inProgress }}</p>
-          <p v-if="isToday && yesterdayStats" class="stat-trend" :data-trend="stats.inProgress > yesterdayStats.inProgress ? 'up' : undefined">
-            {{ stats.inProgress > yesterdayStats.inProgress ? '↑' : '→' }}{{ Math.abs(stats.inProgress - yesterdayStats.inProgress) }}
+          <p v-if="isToday && yesterdayStats" class="stat-trend" :data-trend="stats.inProgress > yesterdayStats.inProgress ? 'up-bad' : undefined">
+            {{ stats.inProgress > yesterdayStats.inProgress ? '↑' : '→' }}{{ Math.abs(stats.inProgress - yesterdayStats.inProgress) }} 较昨日
           </p>
         </article>
         <article class="stat-block" :data-active="stats.done > 0" data-kind="done">
@@ -452,7 +467,7 @@ onMounted(async () => {
     </aside>
 
     <!-- ── Workspace ── -->
-    <main class="workspace">
+    <main class="workspace entrance-2">
       <header class="page-head">
         <div class="title-row">
           <div class="title-stack">
@@ -474,7 +489,9 @@ onMounted(async () => {
         <section v-if="isToday" class="add-shell">
           <div class="add-row">
             <div class="composer-title">
+              <label class="composer-label" for="task-input">新增任务</label>
               <input
+                id="task-input"
                 v-model="composerTitle"
                 type="text"
                 maxlength="120"
@@ -503,6 +520,12 @@ onMounted(async () => {
       </header>
 
       <!-- Task area body -->
+      <Transition name="date-switch">
+        <div v-if="undoTask" class="undo-toast">
+          <span>已删除「{{ undoTask.title }}」</span>
+          <button type="button" @click="undoDelete">撤销</button>
+        </div>
+      </Transition>
       <div class="workspace-body" :data-editor-open="editingTaskId ? 'true' : 'false'">
         <section class="tasks-panel">
           <div class="section-row">
