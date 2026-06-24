@@ -315,6 +315,8 @@ async function hydrateTasks() {
 function selectDate(iso) {
   selectedDate.value = iso;
   calendarMonth.value = iso.slice(0, 7);
+  undoTask.value = null;
+  if (undoTimer) { clearTimeout(undoTimer); undoTimer = null; }
 }
 
 function prevMonth() {
@@ -505,7 +507,7 @@ onMounted(async () => {
         <!-- Stats banner -->
         <div class="stat-banner">
           <div class="stat-banner-item">
-            <span class="stat-banner-label">今日完成率</span>
+            <span class="stat-banner-label">{{ isToday ? '今日完成率' : '当日完成率' }}</span>
             <span class="stat-banner-value">{{ stats.rate !== null ? stats.rate + '%' : '--' }}</span>
           </div>
           <div class="stat-banner-divider"></div>

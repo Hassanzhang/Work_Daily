@@ -97,6 +97,7 @@ body {
 }
 
 .page-canvas {
+  position: relative;
   width: min(1440px, 100%);
   height: calc(100vh - 56px);
   display: flex;
@@ -111,6 +112,8 @@ body {
   align-items: center;
   flex-shrink: 0;
   padding-top: var(--s-1);
+  position: relative;
+  z-index: 1;
 }
 
 .app-tabs { display: inline-flex; }
@@ -155,6 +158,8 @@ body {
   flex: 1;
   min-height: 0;
   display: flex;
+  position: relative;
+  z-index: 1;
 }
 
 .app-stage > * {
@@ -357,7 +362,7 @@ body {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 3px 1px;
+  gap: 2px;
 }
 
 .calendar-day {
@@ -1852,10 +1857,9 @@ body {
 
 .entrance-1 { animation: entranceIn 300ms var(--ease-out) both; }
 .entrance-2 { animation: entranceIn 300ms var(--ease-out) 80ms both; }
-.entrance-3 { animation: entranceIn 300ms var(--ease-out) 160ms both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .entrance-1, .entrance-2, .entrance-3 { animation: none; opacity: 1; }
+  .entrance-1, .entrance-2 { animation: none; opacity: 1; }
 }
 
 /* ── Transitions ── */
