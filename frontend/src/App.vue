@@ -14,8 +14,8 @@ const pages = [
 
 watch(currentPage, (v) => localStorage.setItem(NAV_KEY, v));
 
-const activeView = computed(() =>
-  currentPage.value === "memberships" ? MembershipsView : WorkDailyView
+const currentPageIndex = computed(() =>
+  pages.findIndex((page) => page.value === currentPage.value)
 );
 </script>
 
@@ -26,7 +26,17 @@ const activeView = computed(() =>
         <AppTabs v-model="currentPage" :options="pages" />
       </header>
       <main class="app-stage">
-        <component :is="activeView" />
+        <div
+          class="app-carousel"
+          :style="{ transform: `translate3d(-${currentPageIndex * 50}%, 0, 0)` }"
+        >
+          <section class="app-page" :data-active="currentPage === 'tasks'">
+            <WorkDailyView />
+          </section>
+          <section class="app-page" :data-active="currentPage === 'memberships'">
+            <MembershipsView />
+          </section>
+        </div>
       </main>
     </div>
   </div>

@@ -48,6 +48,7 @@
   --dur-150: 150ms;
   --dur-200: 200ms;
   --dur-300: 300ms;
+  --dur-450: 450ms;
 
   /* Layout */
   --sidebar-w: 280px;
@@ -165,12 +166,31 @@ body {
   display: flex;
   position: relative;
   z-index: 1;
+  overflow: hidden;
 }
 
-.app-stage > * {
-  flex: 1;
+.app-carousel {
+  width: 200%;
+  height: 100%;
+  display: flex;
+  flex: 0 0 200%;
   min-width: 0;
   min-height: 0;
+  will-change: transform;
+  transition: transform var(--dur-450) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-page {
+  width: 50%;
+  flex: 0 0 50%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.app-page[data-active="false"] {
+  pointer-events: none;
 }
 
 /* ── Two-Column Shell ── */
