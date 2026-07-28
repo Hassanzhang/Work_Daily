@@ -35,6 +35,7 @@ const composerPriority = ref("medium");
 const composerTitle = ref("");
 const composerProject = ref("");
 const projectMenuOpen = ref(false);
+const hoveredCompletionPoint = ref(null);
 const editingTaskId = ref(null);
 const pendingDeleteTaskId = ref(null);
 const loading = ref(true);
@@ -85,6 +86,10 @@ function selectProject(name) {
 
 function closeProjectMenu() {
   window.setTimeout(() => { projectMenuOpen.value = false; }, 120);
+}
+
+function chartTooltipX(point) {
+  return Math.min(200, Math.max(4, point.x - 42));
 }
 
 function nextStatus(current) {
@@ -583,9 +588,13 @@ onMounted(async () => {
           <path class="completion-chart__area" :d="completionChart.areaPath" />
           <path class="completion-chart__line" :d="completionChart.linePath" />
           <g v-for="point in completionChart.points" :key="point.date">
-            <title>{{ point.label }}：完成 {{ point.count }} 条</title>
+            <circle class="completion-chart__hit" :cx="point.x" :cy="point.y" r="14" tabindex="0" @mouseenter="hoveredCompletionPoint = point" @mouseleave="hoveredCompletionPoint = null" @focus="hoveredCompletionPoint = point" @blur="hoveredCompletionPoint = null" />
             <circle class="completion-chart__dot" :cx="point.x" :cy="point.y" r="3" />
             <text class="completion-chart__x-label" :x="point.x" :y="completionChart.frame.height - 6" text-anchor="middle">{{ point.label }}</text>
+          </g>
+          <g v-if="hoveredCompletionPoint" class="completion-chart__tooltip" pointer-events="none">
+            <rect :x="chartTooltipX(hoveredCompletionPoint)" :y="hoveredCompletionPoint.y < 38 ? hoveredCompletionPoint.y + 10 : hoveredCompletionPoint.y - 32" width="84" height="24" rx="5" />
+            <text :x="chartTooltipX(hoveredCompletionPoint) + 42" :y="hoveredCompletionPoint.y < 38 ? hoveredCompletionPoint.y + 26 : hoveredCompletionPoint.y - 16" text-anchor="middle">{{ hoveredCompletionPoint.label }} · {{ hoveredCompletionPoint.count }} 条</text>
           </g>
         </svg>
       </section>

@@ -527,7 +527,7 @@ body {
 }
 
 .completion-chart__eyebrow {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 650;
   letter-spacing: 0.12em;
   color: var(--color-pencil);
@@ -535,14 +535,14 @@ body {
 
 .completion-chart h2 {
   margin-top: 2px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 650;
   color: var(--color-ink);
 }
 
 .completion-chart__total {
   padding-top: 2px;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--color-pencil);
 }
 
@@ -562,9 +562,9 @@ body {
 
 .completion-chart__y-label,
 .completion-chart__x-label {
-  fill: var(--color-pencil);
+  fill: rgba(41, 61, 76, 0.82);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .completion-chart__area {
@@ -574,15 +574,34 @@ body {
 .completion-chart__line {
   fill: none;
   stroke: var(--color-vermillion);
-  stroke-width: 2;
+  stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 .completion-chart__dot {
-  fill: var(--color-cool-white);
+  fill: #EDF5FA;
   stroke: var(--color-vermillion);
   stroke-width: 1.5;
+}
+
+.completion-chart__hit {
+  fill: transparent;
+  cursor: crosshair;
+  outline: none;
+}
+
+.completion-chart__tooltip rect {
+  fill: rgba(37, 64, 82, 0.9);
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-width: 0.75;
+}
+
+.completion-chart__tooltip text {
+  fill: #F4F9FC;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
 }
 
 /* ── Stats Banner ── */
@@ -2234,6 +2253,10 @@ body {
   background: rgba(237, 245, 250, 0.62);
   backdrop-filter: blur(12px) saturate(1.03);
   -webkit-backdrop-filter: blur(12px) saturate(1.03);
+}
+
+.completion-chart.frosted-surface {
+  background: rgba(237, 245, 250, 0.72);
 }
 
 .task-item.is-editing.frosted-surface,
