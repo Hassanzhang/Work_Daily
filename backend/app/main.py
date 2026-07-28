@@ -83,6 +83,7 @@ def ensure_tasks_table(cursor) -> None:
         CREATE TABLE IF NOT EXISTS {TASKS_TABLE} (
             id VARCHAR(64) PRIMARY KEY,
             title TEXT NOT NULL,
+            project VARCHAR(255) NOT NULL DEFAULT '未归类项目',
             status VARCHAR(32) NOT NULL,
             priority VARCHAR(32) NOT NULL,
             created_at DATETIME NOT NULL,
@@ -90,6 +91,11 @@ def ensure_tasks_table(cursor) -> None:
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """
     )
+    cursor.execute(f"SHOW COLUMNS FROM {TASKS_TABLE} LIKE 'project'")
+    if not cursor.fetchone():
+        cursor.execute(
+            f"ALTER TABLE {TASKS_TABLE} ADD COLUMN project VARCHAR(255) NOT NULL DEFAULT '未归类项目' AFTER title"
+        )
 
 
 def ensure_memberships_table(cursor) -> None:
@@ -110,6 +116,7 @@ def ensure_memberships_table(cursor) -> None:
 class Task(BaseModel):
     id: str
     title: str
+    project: str = "未归类项目"
     status: str
     priority: str
     created_at: str
@@ -178,6 +185,7 @@ def get_tasks():
                 SELECT
                     id,
                     title,
+                    project,
                     status,
                     priority,
                     DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
@@ -203,15 +211,17 @@ def save_tasks(tasks: list[Task]):
                     INSERT INTO {TASKS_TABLE} (
                         id,
                         title,
+                        project,
                         status,
                         priority,
                         created_at,
                         completed_at
-                    ) VALUES (%s, %s, %s, %s, %s, %s)
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s)
                     """,
                     (
                         task.id,
                         task.title,
+                        task.project,
                         task.status,
                         task.priority,
                         normalize_datetime_text(task.created_at),

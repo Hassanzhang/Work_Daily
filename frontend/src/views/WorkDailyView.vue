@@ -33,12 +33,14 @@ const currentFilter = ref("all");
 const collapseCompleted = ref(false);
 const composerPriority = ref("medium");
 const composerTitle = ref("");
+const composerProject = ref("");
+const projectMenuOpen = ref(false);
 const editingTaskId = ref(null);
 const pendingDeleteTaskId = ref(null);
 const loading = ref(true);
 const undoTask = ref(null);
 let undoTimer = null;
-const editorDraft = reactive({ title: "", priority: "medium" });
+const editorDraft = reactive({ title: "", project: "", priority: "medium" });
 
 let saveTimer = null;
 let saveInFlight = Promise.resolve();
@@ -72,6 +74,19 @@ function priorityLabel(p) {
   return found ? found.label : p;
 }
 
+function projectName(value) {
+  return value?.trim() || "未归类项目";
+}
+
+function selectProject(name) {
+  composerProject.value = name;
+  projectMenuOpen.value = false;
+}
+
+function closeProjectMenu() {
+  window.setTimeout(() => { projectMenuOpen.value = false; }, 120);
+}
+
 function nextStatus(current) {
   const idx = STATUSES.findIndex((s) => s.value === current);
   return idx < STATUSES.length - 1 ? STATUSES[idx + 1].value : STATUSES[0].value;
@@ -93,6 +108,7 @@ function serializeTask(t) {
   return {
     id: t.id,
     title: t.title,
+    project: projectName(t.project),
     status: t.status,
     priority: t.priority,
     created_at: t.created_at,
@@ -145,6 +161,20 @@ const filteredTasks = computed(() => {
   }
   return list;
 });
+
+const projectGroups = computed(() => {
+  const groups = new Map();
+  filteredTasks.value.forEach((task) => {
+    const name = projectName(task.project);
+    if (!groups.has(name)) groups.set(name, []);
+    groups.get(name).push(task);
+  });
+  return [...groups.entries()].map(([name, projectTasks]) => ({ name, tasks: projectTasks }));
+});
+
+const projectSuggestions = computed(() =>
+  [...new Set(tasks.value.map((task) => projectName(task.project)).filter((name) => name !== "未归类项目"))]
+);
 
 const stats = computed(() => {
   const todayTasks = tasks.value.filter((t) => t.created_at?.startsWith(selectedDate.value));
@@ -310,6 +340,7 @@ function loadState() {
       if (parsed.filter) currentFilter.value = parsed.filter;
       if (typeof parsed.collapseCompleted === "boolean") collapseCompleted.value = parsed.collapseCompleted;
       if (parsed.composerPriority) composerPriority.value = parsed.composerPriority;
+      if (parsed.composerProject) composerProject.value = parsed.composerProject;
     }
   } catch { /* ignore */ }
 }
@@ -319,7 +350,8 @@ function persistState() {
     tasks: tasks.value,
     filter: currentFilter.value,
     collapseCompleted: collapseCompleted.value,
-    composerPriority: composerPriority.value
+    composerPriority: composerPriority.value,
+    composerProject: composerProject.value
   }));
   saveStatsSnapshot();
   queueSync();
@@ -400,6 +432,7 @@ function addTask() {
   tasks.value.push({
     id: generateId(),
     title,
+    project: projectName(composerProject.value),
     status: "in-progress",
     priority: composerPriority.value,
     created_at: `${selectedDate.value} ${new Date().toTimeString().slice(0, 8)}`,
@@ -427,6 +460,7 @@ function openEditor(taskId) {
   const task = tasks.value.find((t) => t.id === taskId);
   if (task) {
     editorDraft.title = task.title;
+    editorDraft.project = projectName(task.project);
     editorDraft.priority = task.priority;
   }
 }
@@ -439,6 +473,7 @@ function saveEditor() {
   const task = tasks.value.find((t) => t.id === editingTaskId.value);
   if (!task) return;
   task.title = editorDraft.title.trim() || task.title;
+  task.project = projectName(editorDraft.project);
   task.priority = editorDraft.priority;
   closeEditor();
   persistState();
@@ -625,6 +660,23 @@ onMounted(async () => {
                 @keydown.enter.prevent="addTask"
               />
             </div>
+            <div class="composer-project">
+              <label class="composer-label" for="project-input">所属项目</label>
+              <input
+                id="project-input"
+                v-model="composerProject"
+                type="text"
+                maxlength="60"
+                placeholder="例如：官网改版"
+                @focus="projectMenuOpen = true"
+                @blur="closeProjectMenu"
+              />
+              <div v-if="projectMenuOpen && projectSuggestions.length" class="project-suggestion-menu">
+                <button v-for="project in projectSuggestions" :key="project" type="button" @mousedown.prevent="selectProject(project)">
+                  {{ project }}
+                </button>
+              </div>
+            </div>
             <div class="composer-priority">
               <p class="composer-priority-label">优先级</p>
               <div class="priority-group">
@@ -687,9 +739,15 @@ onMounted(async () => {
 
             <!-- Tasks -->
             <template v-else-if="filteredTasks.length">
-            <TransitionGroup name="task-list" tag="div" class="task-list-group">
+            <div class="task-list-group">
+              <section v-for="group in projectGroups" :key="group.name" class="project-group">
+                <header class="project-group__head">
+                  <span class="project-group__eyebrow">项目</span>
+                  <h4 class="project-group__title">{{ group.name }}</h4>
+                </header>
+                <TransitionGroup name="task-list" tag="div" class="project-task-stack">
               <article
-                v-for="task in filteredTasks"
+                v-for="task in group.tasks"
                 :key="task.id"
                 class="task-item"
                 :class="{
@@ -737,7 +795,9 @@ onMounted(async () => {
                   <span class="meta-tag meta-date">{{ task.created_at?.slice(0, 10) }}</span>
                 </div>
               </article>
-            </TransitionGroup>
+                </TransitionGroup>
+              </section>
+            </div>
             </template>
 
             <!-- Empty -->
@@ -768,6 +828,10 @@ onMounted(async () => {
                   @keydown.meta.enter="saveEditor"
                   @keydown.ctrl.enter="saveEditor"
                 ></textarea>
+              </div>
+              <div class="editor-field">
+                <label class="editor-label" for="editor-project">所属项目</label>
+                <input id="editor-project" v-model="editorDraft.project" class="editor-project-input" maxlength="60" />
               </div>
               <div class="editor-field editor-field--priority">
                 <label class="editor-label">优先级</label>
