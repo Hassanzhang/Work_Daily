@@ -490,8 +490,13 @@ body {
   font-weight: 640;
 }
 
-.day-button.has-tasks:not(.is-selected):not(.is-today) {
+.day-button.has-open:not(.is-selected):not(.is-today) {
   color: var(--color-vermillion);
+  font-weight: 620;
+}
+
+.day-button.is-complete:not(.is-selected):not(.is-today) {
+  color: var(--color-pine);
   font-weight: 620;
 }
 
