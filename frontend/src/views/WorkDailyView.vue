@@ -206,22 +206,79 @@ const calendarDays = computed(() => {
   const startDay = firstDay.getDay() || 7; // Mon=1, Sun=7
   const leading = startDay - 1;
   const daysInMonth = new Date(y, m, 0).getDate();
-  const cells = [];
-
-  for (let i = leading; i > 0; i--) {
-    const d = new Date(y, m - 1, 1 - i);
-    cells.push({ date: isoDate(d), day: d.getDate(), inMonth: false });
-  }
+  const cells = Array.from({ length: leading }, (_, index) => ({ key: `blank-${index}`, isBlank: true }));
   for (let i = 1; i <= daysInMonth; i++) {
-    cells.push({ date: `${y}-${String(m).padStart(2, "0")}-${String(i).padStart(2, "0")}`, day: i, inMonth: true });
-  }
-  const remaining = 42 - cells.length;
-  for (let i = 1; i <= remaining; i++) {
-    const d = new Date(y, m, i);
-    cells.push({ date: isoDate(d), day: d.getDate(), inMonth: false });
+    const date = `${y}-${String(m).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
+    cells.push({ key: date, date, day: i, isBlank: false });
   }
   return cells;
 });
+
+const completionChart = computed(() => {
+  const anchor = new Date(`${selectedDate.value}T12:00:00`);
+  const dates = [];
+  const cursor = new Date(anchor);
+  while (dates.length < 5) {
+    const weekday = cursor.getDay();
+    if (weekday >= 1 && weekday <= 5) dates.unshift(isoDate(cursor));
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  const counts = dates.map((date) => tasks.value.filter((task) =>
+    task.status === "done" && task.completed_at?.startsWith(date)
+  ).length);
+  const max = Math.max(...counts, 1);
+  const frame = { left: 30, right: 8, top: 12, bottom: 28, width: 292, height: 164 };
+  const innerWidth = frame.width - frame.left - frame.right;
+  const innerHeight = frame.height - frame.top - frame.bottom;
+  const points = counts.map((count, index) => ({
+    date: dates[index],
+    label: dates[index].slice(5),
+    count,
+    x: frame.left + (innerWidth * index) / (counts.length - 1),
+    y: frame.top + innerHeight - (count / max) * innerHeight
+  }));
+  const baseline = frame.top + innerHeight;
+  const linePath = monotoneXPath(points);
+  const areaPath = `${linePath} L ${points.at(-1).x} ${baseline} L ${points[0].x} ${baseline} Z`;
+  const ticks = [...new Set([max, Math.ceil(max / 2), 0])];
+  return { frame, points, linePath, areaPath, baseline, ticks, max, innerHeight };
+});
+
+// Monotone cubic interpolation, matching the curveMonotoneX behavior used in the supplied chart.
+function monotoneXPath(points) {
+  if (points.length < 2) return "";
+  if (points.length === 2) {
+    const slope = (points[1].y - points[0].y) / (points[1].x - points[0].x);
+    return cubicPath(points, [slope, slope]);
+  }
+  const slope3 = (a, b, c) => {
+    const h0 = b.x - a.x;
+    const h1 = c.x - b.x;
+    const s0 = (b.y - a.y) / h0;
+    const s1 = (c.y - b.y) / h1;
+    const p = (s0 * h1 + s1 * h0) / (h0 + h1);
+    return (Math.sign(s0) + Math.sign(s1)) * Math.min(Math.abs(s0), Math.abs(s1), Math.abs(p) / 2) || 0;
+  };
+  const slope2 = (a, b, tangent) => {
+    const h = b.x - a.x;
+    return h ? (3 * (b.y - a.y) / h - tangent) / 2 : tangent;
+  };
+  const tangents = Array(points.length).fill(0);
+  for (let index = 1; index < points.length - 1; index++) {
+    tangents[index] = slope3(points[index - 1], points[index], points[index + 1]);
+  }
+  tangents[0] = slope2(points[0], points[1], tangents[1]);
+  tangents[points.length - 1] = slope2(points.at(-2), points.at(-1), tangents.at(-2));
+  return cubicPath(points, tangents);
+}
+
+function cubicPath(points, tangents) {
+  return points.slice(1).reduce((path, point, index) => {
+    const previous = points[index];
+    const dx = (point.x - previous.x) / 3;
+    return `${path} C ${previous.x + dx} ${previous.y + tangents[index] * dx}, ${point.x - dx} ${point.y - tangents[index + 1] * dx}, ${point.x} ${point.y}`;
+  }, `M ${points[0].x} ${points[0].y}`);
+}
 
 function dateHasTasks(dateIso) {
   return tasks.value.some((t) => t.created_at?.startsWith(dateIso));
@@ -455,11 +512,11 @@ onMounted(async () => {
           <span v-for="d in WEEKDAYS" :key="d" class="calendar-weekday">{{ d }}</span>
         </div>
         <div class="calendar-grid">
-          <div v-for="cell in calendarDays" :key="cell.date" class="calendar-day">
+          <div v-for="cell in calendarDays" :key="cell.key" class="calendar-day">
             <button
+              v-if="!cell.isBlank"
               class="day-button"
               :class="{
-                'is-outside': !cell.inMonth,
                 'is-today': cell.date === todayIso(),
                 'is-selected': cell.date === selectedDate,
                 'has-open': dateHasOpenTasks(cell.date) && cell.date !== selectedDate,
@@ -473,6 +530,29 @@ onMounted(async () => {
             </button>
           </div>
         </div>
+      </section>
+
+      <section class="completion-chart" aria-labelledby="completion-chart-title">
+        <div class="completion-chart__head">
+          <div>
+            <p class="completion-chart__eyebrow">COMPLETED</p>
+            <h2 id="completion-chart-title">每日完成任务</h2>
+          </div>
+          <span class="completion-chart__total">近 5 个工作日</span>
+        </div>
+        <svg class="completion-chart__svg" :viewBox="`0 0 ${completionChart.frame.width} ${completionChart.frame.height}`" role="img" aria-label="最近五个工作日完成任务数量趋势">
+          <g v-for="tick in completionChart.ticks" :key="tick">
+            <line class="completion-chart__grid" :x1="completionChart.frame.left" :x2="completionChart.frame.width - completionChart.frame.right" :y1="completionChart.frame.top + completionChart.innerHeight - (tick / completionChart.max) * completionChart.innerHeight" :y2="completionChart.frame.top + completionChart.innerHeight - (tick / completionChart.max) * completionChart.innerHeight" />
+            <text class="completion-chart__y-label" x="0" :y="completionChart.frame.top + completionChart.innerHeight - (tick / completionChart.max) * completionChart.innerHeight + 3">{{ tick }}</text>
+          </g>
+          <path class="completion-chart__area" :d="completionChart.areaPath" />
+          <path class="completion-chart__line" :d="completionChart.linePath" />
+          <g v-for="point in completionChart.points" :key="point.date">
+            <title>{{ point.label }}：完成 {{ point.count }} 条</title>
+            <circle class="completion-chart__dot" :cx="point.x" :cy="point.y" r="3" />
+            <text class="completion-chart__x-label" :x="point.x" :y="completionChart.frame.height - 6" text-anchor="middle">{{ point.label }}</text>
+          </g>
+        </svg>
       </section>
 
       <!-- Month summary -->
