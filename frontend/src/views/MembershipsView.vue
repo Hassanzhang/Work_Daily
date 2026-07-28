@@ -247,14 +247,14 @@ watch(() => composer.startDate, (val) => {
   <div class="app-shell">
     <!-- ── Sidebar ── -->
     <aside class="sidebar entrance-1">
-      <section class="brand-block">
+      <section class="brand-block frosted-surface">
         <p class="eyebrow">MEMBERSHIPS</p>
         <h1 class="brand-title">会员管理</h1>
         <p class="brand-copy">追踪订阅周期，到期前及时续费。</p>
       </section>
 
       <!-- Summary -->
-      <section class="membership-summary-card">
+      <section class="membership-summary-card frosted-surface">
         <div class="membership-summary-head">
           <p class="eyebrow">Overview</p>
           <h2 class="membership-summary-title">会员总览</h2>
@@ -276,7 +276,7 @@ watch(() => composer.startDate, (val) => {
       </section>
 
       <!-- Alerts -->
-      <section class="membership-alert-card">
+      <section class="membership-alert-card frosted-surface">
         <div class="membership-alert-head">
           <p class="eyebrow">NEXT UP</p>
           <h3 class="membership-alert-title">到期提醒</h3>
@@ -318,7 +318,7 @@ watch(() => composer.startDate, (val) => {
     </aside>
 
     <!-- ── Workspace ── -->
-    <main class="workspace entrance-2">
+    <main class="workspace frosted-surface entrance-2">
       <header class="page-head">
         <div class="title-row">
           <div class="title-stack">
@@ -329,7 +329,7 @@ watch(() => composer.startDate, (val) => {
         </div>
 
         <!-- Composer -->
-        <section class="add-shell membership-composer">
+        <section class="add-shell membership-composer frosted-surface">
           <div class="add-row membership-add-row">
             <div class="composer-title">
               <input v-model="composer.name" type="text" maxlength="120" placeholder="会员名称，例如 ChatGPT Plus" />
@@ -414,11 +414,11 @@ watch(() => composer.startDate, (val) => {
           </div>
         </div>
 
-        <div ref="listRef" class="membership-list">
+        <div ref="listRef" class="membership-list frosted-surface">
           <article
             v-for="item in filteredMemberships"
             :key="item.id"
-            class="membership-item"
+            class="membership-item frosted-surface"
             :class="{ 'is-editing': editingId === item.id, 'is-expired': item.status === 'expired', 'is-highlighted': highlightId === item.id, 'is-expiring-soon': isExpiringSoon(item) }"
             :data-member-id="item.id"
             :title="`${item.name} · ${formatDate(item.start_date)} → ${formatDate(item.end_date)} · 剩余 ${item.days_remaining ?? '?'} 天`"
@@ -470,7 +470,7 @@ watch(() => composer.startDate, (val) => {
 
             <!-- Inline editor -->
             <transition name="membership-editor">
-              <div v-if="editingId === item.id" class="membership-editor">
+              <div v-if="editingId === item.id" class="membership-editor frosted-surface">
                 <div class="membership-editor-grid">
                   <label class="membership-field">
                     <span class="membership-field-label">会员名称</span>

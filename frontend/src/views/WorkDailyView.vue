@@ -524,14 +524,14 @@ onMounted(async () => {
   <div class="app-shell">
     <!-- ── Sidebar ── -->
     <aside class="sidebar entrance-1">
-      <section class="brand-block">
+      <section class="brand-block frosted-surface">
         <p class="eyebrow">TASK JOURNAL</p>
         <h1 class="brand-title">工作记录</h1>
         <p class="brand-copy">按天追踪，专注推进每一项任务。</p>
       </section>
 
       <!-- Calendar -->
-      <section class="calendar-shell">
+      <section class="calendar-shell frosted-surface">
         <div class="calendar-header">
           <span class="calendar-mode">Monthly</span>
           <button class="calendar-link" type="button" @click="goToday">Today</button>
@@ -567,7 +567,7 @@ onMounted(async () => {
         </div>
       </section>
 
-      <section class="completion-chart" aria-labelledby="completion-chart-title">
+      <section class="completion-chart frosted-surface" aria-labelledby="completion-chart-title">
         <div class="completion-chart__head">
           <div>
             <p class="completion-chart__eyebrow">COMPLETED</p>
@@ -591,7 +591,7 @@ onMounted(async () => {
       </section>
 
       <!-- Month summary -->
-      <div v-if="monthSummary.total > 0" class="month-summary">
+      <div v-if="monthSummary.total > 0" class="month-summary frosted-surface">
         <div class="ms-col">
           <span class="ms-num">{{ monthSummary.total }}</span>
           <span class="ms-label">总任务</span>
@@ -610,7 +610,7 @@ onMounted(async () => {
 
     </aside>
     <!-- ── Workspace ── -->
-    <main class="workspace entrance-2">
+    <main class="workspace frosted-surface entrance-2">
       <header class="page-head">
         <div class="title-row">
           <div class="title-stack">
@@ -629,7 +629,7 @@ onMounted(async () => {
         </div>
 
         <!-- Stats banner -->
-        <div class="stat-banner">
+        <div class="stat-banner frosted-surface">
           <div class="stat-banner-item">
             <span class="stat-banner-label">{{ isToday ? '今日完成率' : '当日完成率' }}</span>
             <span class="stat-banner-value">{{ stats.rate !== null ? stats.rate + '%' : '--' }}</span>
@@ -741,7 +741,7 @@ onMounted(async () => {
             <template v-else-if="filteredTasks.length">
             <div class="task-list-group">
               <section v-for="group in projectGroups" :key="group.name" class="project-group">
-                <header class="project-group__head">
+                <header class="project-group__head frosted-surface">
                   <span class="project-group__eyebrow">项目</span>
                   <h4 class="project-group__title">{{ group.name }}</h4>
                 </header>
@@ -749,7 +749,7 @@ onMounted(async () => {
               <article
                 v-for="task in group.tasks"
                 :key="task.id"
-                class="task-item"
+                class="task-item frosted-surface"
                 :class="{
                   'is-done': task.status === 'done',
                   'is-editing': editingTaskId === task.id
