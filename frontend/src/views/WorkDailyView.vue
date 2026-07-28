@@ -227,15 +227,6 @@ function dateHasTasks(dateIso) {
   return tasks.value.some((t) => t.created_at?.startsWith(dateIso));
 }
 
-function dateHasOpenTasks(dateIso) {
-  return tasks.value.some((t) => t.created_at?.startsWith(dateIso) && t.status !== "done");
-}
-
-function dateHasCompleteOnly(dateIso) {
-  const dayTasks = tasks.value.filter((t) => t.created_at?.startsWith(dateIso));
-  return dayTasks.length > 0 && dayTasks.every((t) => t.status === "done");
-}
-
 function taskCountTitle(dateIso) {
   const count = tasks.value.filter((t) => t.created_at?.startsWith(dateIso)).length;
   if (!count) return "";
@@ -462,8 +453,7 @@ onMounted(async () => {
                 'is-outside': !cell.inMonth,
                 'is-today': cell.date === todayIso(),
                 'is-selected': cell.date === selectedDate,
-                'has-open': dateHasOpenTasks(cell.date) && cell.date !== selectedDate,
-                'is-complete': dateHasCompleteOnly(cell.date) && cell.date !== selectedDate
+                'has-tasks': dateHasTasks(cell.date) && cell.date !== selectedDate
               }"
               type="button"
               :title="taskCountTitle(cell.date)"

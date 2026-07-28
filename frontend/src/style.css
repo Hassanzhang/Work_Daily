@@ -490,21 +490,9 @@ body {
   font-weight: 640;
 }
 
-.day-button.has-open:not(.is-selected)::after {
-  content: "";
-  position: absolute;
-  bottom: 2px;
-  left: 50%;
-  width: 6px;
-  height: 6px;
-  border-radius: var(--r-full);
-  background: var(--color-vermillion);
-  transform: translateX(-50%);
-  opacity: 0.72;
-}
-
-.day-button.is-complete:not(.is-selected) {
-  color: var(--color-pine);
+.day-button.has-tasks:not(.is-selected):not(.is-today) {
+  color: var(--color-vermillion);
+  font-weight: 620;
 }
 
 /* ── Stats Banner ── */
